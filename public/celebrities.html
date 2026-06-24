@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Celebrities — StarGifts</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="/">⭐ StarGifts</a>
+  <div class="navbar-links">
+    <a href="/celebrities.html" class="text-gold">Celebrities</a>
+    <a href="/shop.html">Shop</a>
+  </div>
+  <div class="navbar-actions">
+    <button class="cart-btn" onclick="Cart.openSidebar()">🛒 Cart <span class="cart-count" style="display:none">0</span></button>
+    <div id="nav-actions" style="display:flex;gap:0.5rem;align-items:center"></div>
+  </div>
+</nav>
+
+<div class="section">
+  <h1 class="section-title">All <span>Celebrities</span></h1>
+  <p class="section-sub">Browse and support your favourite stars</p>
+
+  <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center">
+    <input id="search" class="form-input" style="max-width:260px" placeholder="Search celebrities..." oninput="loadCelebs()">
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-sm btn-outline filter-btn active" data-cat="">All</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="music">Music</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="film">Film</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="sports">Sports</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="tv">TV</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="other">Other</button>
+    </div>
+  </div>
+
+  <div id="celebs-grid" class="grid grid-3">
+    <div class="empty-state"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 StarGifts</p>
+</footer>
+
+<div class="cart-overlay" id="cart-overlay" onclick="Cart.closeSidebar()"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header"><h3>Your Cart</h3><button class="cart-close" onclick="Cart.closeSidebar()">✕</button></div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+    <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
+  </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  let activeCategory = '';
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'btn-gold'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      loadCelebs();
+    });
+  });
+
+  async function loadCelebs() {
+    const search = document.getElementById('search').value;
+    const params = new URLSearchParams();
+    if (activeCategory) params.set('category', activeCategory);
+    if (search) params.set('search', search);
+    try {
+      const celebs = await API.get('/celebrities?' + params);
+      const el = document.getElementById('celebs-grid');
+      if (!celebs.length) {
+        el.innerHTML = '<div class="empty-state"><h3>No celebrities found</h3></div>';
+        return;
+      }
+      el.innerHTML = celebs.map(c => `
+        <a href="/celebrity.html?slug=${c.slug}" class="card" style="text-decoration:none;color:inherit">
+          <img class="card-img" src="${c.photo || '/img/placeholder.png'}" alt="${c.name}" onerror="this.src='/img/placeholder.png'" style="height:240px">
+          <div class="card-body">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
+              <div class="card-title" style="margin:0">${c.name}</div>
+              ${c.featured ? '<span class="badge badge-gold">⭐ Featured</span>' : ''}
+            </div>
+            <div class="card-sub">${c.nationality || ''} &nbsp; <span class="badge badge-accent">${c.category}</span></div>
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.5">${c.shortBio || c.bio?.substring(0, 100) + '...' || ''}</div>
+          </div>
+        </a>`).join('');
+    } catch(e) {
+      document.getElementById('celebs-grid').innerHTML = '<div class="empty-state"><h3>Failed to load</h3></div>';
+    }
+  }
+
+  loadCelebs();
+</script>
+</body>
+</html>

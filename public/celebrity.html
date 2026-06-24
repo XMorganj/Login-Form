@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Celebrity — StarGifts</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="/">⭐ StarGifts</a>
+  <div class="navbar-links">
+    <a href="/celebrities.html">Celebrities</a>
+    <a href="/shop.html">Shop</a>
+  </div>
+  <div class="navbar-actions">
+    <button class="cart-btn" onclick="Cart.openSidebar()">🛒 Cart <span class="cart-count" style="display:none">0</span></button>
+    <div id="nav-actions" style="display:flex;gap:0.5rem;align-items:center"></div>
+  </div>
+</nav>
+
+<div id="page-content">
+  <div class="empty-state" style="padding:6rem 2rem"><div class="spinner"></div></div>
+</div>
+
+<div class="cart-overlay" id="cart-overlay" onclick="Cart.closeSidebar()"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header"><h3>Your Cart</h3><button class="cart-close" onclick="Cart.closeSidebar()">✕</button></div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+    <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
+  </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  const slug = new URLSearchParams(location.search).get('slug');
+
+  async function loadPage() {
+    if (!slug) { window.location.href = '/celebrities.html'; return; }
+    try {
+      const [celeb, products] = await Promise.all([
+        API.get('/celebrities/' + slug),
+        API.get('/products?celebrity=')
+      ]);
+
+      const socialLinks = Object.entries(celeb.socialLinks || {})
+        .filter(([, v]) => v)
+        .map(([k, v]) => `<a href="${v}" class="social-link" target="_blank" rel="noopener">${k.charAt(0).toUpperCase() + k.slice(1)}</a>`)
+        .join('');
+
+      const allProducts = await API.get('/products');
+      const celebProducts = allProducts.filter(p => p.celebrity?._id === celeb._id || p.celebrity === celeb._id);
+
+      document.title = `${celeb.name} — StarGifts`;
+      document.getElementById('page-content').innerHTML = `
+        <div class="celeb-cover" style="background-image:url('${celeb.coverPhoto || '/img/placeholder.png'}')"></div>
+        <div class="celeb-header">
+          <img class="celeb-avatar" src="${celeb.photo || '/img/placeholder.png'}" alt="${celeb.name}" onerror="this.src='/img/placeholder.png'">
+          <div class="celeb-info">
+            <div class="celeb-name">${celeb.name}</div>
+            <div class="celeb-category">${celeb.category} ${celeb.nationality ? '· ' + celeb.nationality : ''}</div>
+          </div>
+        </div>
+        <div class="celeb-body">
+          ${socialLinks ? `<div class="social-links">${socialLinks}</div>` : ''}
+          <p class="celeb-bio">${celeb.bio}</p>
+
+          ${celeb.birthDate ? `<p class="text-muted" style="margin-bottom:1.5rem">🎂 Born: ${new Date(celeb.birthDate).toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'})}</p>` : ''}
+
+          <div class="divider"></div>
+          <h2 class="section-title mb-2">Send a <span>Gift</span></h2>
+          ${celebProducts.length
+            ? `<div class="grid grid-4" style="margin-top:1rem">
+                ${celebProducts.map(p => `
+                  <div class="card">
+                    <img class="card-img" src="${p.images?.[0] || '/img/placeholder.png'}" alt="${p.name}" onerror="this.src='/img/placeholder.png'">
+                    <div class="card-body">
+                      <div class="card-title">${p.name}</div>
+                      <div class="card-sub">${p.description?.substring(0, 60)}...</div>
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.8rem">
+                        <div class="card-price">$${p.price.toFixed(2)}</div>
+                        <button class="btn btn-gold btn-sm" onclick='Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
+                      </div>
+                    </div>
+                  </div>`).join('')}
+              </div>`
+            : '<div class="empty-state"><h3>No gifts available for this celebrity yet</h3></div>'}
+        </div>
+        <footer style="margin-top:3rem"><p>© 2025 StarGifts</p></footer>
+      `;
+    } catch(e) {
+      document.getElementById('page-content').innerHTML = '<div class="empty-state"><h3>Celebrity not found</h3><a href="/celebrities.html" class="btn btn-outline mt-3">Back to Celebrities</a></div>';
+    }
+  }
+
+  loadPage();
+</script>
+</body>
+</html>

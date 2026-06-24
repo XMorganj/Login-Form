@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gift Shop — StarGifts</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="/">⭐ StarGifts</a>
+  <div class="navbar-links">
+    <a href="/celebrities.html">Celebrities</a>
+    <a href="/shop.html" class="text-gold">Shop</a>
+  </div>
+  <div class="navbar-actions">
+    <button class="cart-btn" onclick="Cart.openSidebar()">🛒 Cart <span class="cart-count" style="display:none">0</span></button>
+    <div id="nav-actions" style="display:flex;gap:0.5rem;align-items:center"></div>
+  </div>
+</nav>
+
+<div class="section">
+  <h1 class="section-title">Gift <span>Shop</span></h1>
+  <p class="section-sub">Exclusive merchandise and gifts for your favourite celebrities</p>
+
+  <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center">
+    <input id="search" class="form-input" style="max-width:240px" placeholder="Search gifts..." oninput="loadProducts()">
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+      <button class="btn btn-sm btn-outline filter-btn active" data-cat="">All</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="merchandise">Merchandise</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="digital">Digital</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="experience">Experience</button>
+      <button class="btn btn-sm btn-outline filter-btn" data-cat="donation">Donation</button>
+    </div>
+  </div>
+
+  <div id="products-grid" class="grid grid-4">
+    <div class="empty-state"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 StarGifts</p>
+</footer>
+
+<div class="cart-overlay" id="cart-overlay" onclick="Cart.closeSidebar()"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header"><h3>Your Cart</h3><button class="cart-close" onclick="Cart.closeSidebar()">✕</button></div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+    <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
+  </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  let activeCategory = '';
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      loadProducts();
+    });
+  });
+
+  async function loadProducts() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const params = new URLSearchParams();
+    if (activeCategory) params.set('category', activeCategory);
+    try {
+      let products = await API.get('/products?' + params);
+      if (search) products = products.filter(p => p.name.toLowerCase().includes(search) || p.celebrity?.name?.toLowerCase().includes(search));
+      const el = document.getElementById('products-grid');
+      if (!products.length) {
+        el.innerHTML = '<div class="empty-state"><h3>No products found</h3></div>';
+        return;
+      }
+      el.innerHTML = products.map(p => `
+        <div class="card">
+          <img class="card-img" src="${p.images?.[0] || '/img/placeholder.png'}" alt="${p.name}" onerror="this.src='/img/placeholder.png'">
+          <div class="card-body">
+            <div class="card-title">${p.name}</div>
+            ${p.celebrity ? `<a href="/celebrity.html?slug=${p.celebrity.slug}" class="card-sub" style="color:var(--gold)">${p.celebrity.name}</a>` : ''}
+            <div class="card-sub" style="margin-top:0.3rem">${p.description?.substring(0, 70)}...</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.8rem">
+              <div class="card-price">$${p.price.toFixed(2)}</div>
+              <button class="btn btn-gold btn-sm" onclick='Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
+            </div>
+          </div>
+        </div>`).join('');
+    } catch(e) {
+      document.getElementById('products-grid').innerHTML = '<div class="empty-state"><h3>Failed to load</h3></div>';
+    }
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>

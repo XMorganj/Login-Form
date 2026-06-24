@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — StarGifts</title>
+  <link rel="stylesheet" href="/admin/css/admin.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">⭐ StarGifts Admin</div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="showPanel('dashboard')">📊 Dashboard</div>
+    <div class="nav-item" onclick="showPanel('celebrities')">🌟 Celebrities</div>
+    <div class="nav-item" onclick="showPanel('products')">🎁 Products</div>
+    <div class="nav-item" onclick="showPanel('orders')">📦 Orders</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div id="admin-name" style="margin-bottom:0.5rem;font-weight:600"></div>
+    <button class="btn btn-outline btn-sm" onclick="logout()">Logout</button>
+    <br><a href="/" class="btn btn-sm" style="margin-top:0.5rem;background:none;color:var(--text-muted)">← View Site</a>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="panel-title">Dashboard</h2>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-label">Celebrities</div><div class="stat-value" id="stat-celebs">—</div></div>
+        <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value" id="stat-products">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div></div>
+        <div class="stat-card"><div class="stat-label">Revenue (USD)</div><div class="stat-value" id="stat-revenue">—</div></div>
+      </div>
+      <div class="table-card">
+        <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border)"><strong>Recent Orders</strong></div>
+        <table><thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
+        <tbody id="recent-orders-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Celebrities -->
+    <div class="panel" id="panel-celebrities">
+      <div class="section-header">
+        <h3>Manage Celebrities</h3>
+        <button class="btn btn-gold" onclick="openCelebModal()">+ Add Celebrity</button>
+      </div>
+      <div class="table-card">
+        <table><thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Featured</th><th>Actions</th></tr></thead>
+        <tbody id="celebs-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div class="panel" id="panel-products">
+      <div class="section-header">
+        <h3>Manage Products</h3>
+        <button class="btn btn-gold" onclick="openProductModal()">+ Add Product</button>
+      </div>
+      <div class="table-card">
+        <table><thead><tr><th>Image</th><th>Name</th><th>Celebrity</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+        <tbody id="products-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- Orders -->
+    <div class="panel" id="panel-orders">
+      <div class="section-header"><h3>All Orders</h3></div>
+      <div class="table-card">
+        <table><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Update</th></tr></thead>
+        <tbody id="orders-table"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Celebrity Modal -->
+<div class="modal-overlay" id="celeb-modal">
+  <div class="modal">
+    <h3 id="celeb-modal-title">Add Celebrity</h3>
+    <input type="hidden" id="celeb-id">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Name *</label><input id="celeb-name" class="form-input" placeholder="Full Name" required></div>
+      <div class="form-group"><label class="form-label">Slug (auto-generated)</label><input id="celeb-slug" class="form-input" placeholder="john-doe"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select id="celeb-category" class="form-select">
+          <option value="music">Music</option><option value="film">Film</option>
+          <option value="sports">Sports</option><option value="tv">TV</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Nationality</label><input id="celeb-nationality" class="form-input" placeholder="American"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Short Bio (max 200 chars)</label><input id="celeb-shortbio" class="form-input" placeholder="One-liner description" maxlength="200"></div>
+    <div class="form-group"><label class="form-label">Full Bio *</label><textarea id="celeb-bio" class="form-textarea" placeholder="Full biography..." required></textarea></div>
+    <div class="form-group"><label class="form-label">Birth Date</label><input id="celeb-birthdate" class="form-input" type="date"></div>
+    <div class="form-group"><label class="form-label">Photo</label><input id="celeb-photo" class="form-input" type="file" accept="image/*"></div>
+    <div class="form-group"><label class="form-label">Cover Photo</label><input id="celeb-cover" class="form-input" type="file" accept="image/*"></div>
+    <div style="margin-bottom:1rem">
+      <strong style="font-size:0.85rem;display:block;margin-bottom:0.75rem;color:var(--text-muted)">Social Links</strong>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Instagram</label><input id="celeb-instagram" class="form-input" placeholder="https://instagram.com/..."></div>
+        <div class="form-group"><label class="form-label">Twitter / X</label><input id="celeb-twitter" class="form-input" placeholder="https://twitter.com/..."></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Facebook</label><input id="celeb-facebook" class="form-input" placeholder="https://facebook.com/..."></div>
+        <div class="form-group"><label class="form-label">YouTube</label><input id="celeb-youtube" class="form-input" placeholder="https://youtube.com/..."></div>
+      </div>
+    </div>
+    <label class="form-check"><input type="checkbox" id="celeb-featured"> Mark as Featured</label>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCelebModal()">Cancel</button>
+      <button class="btn btn-gold" id="celeb-save-btn" onclick="saveCelebrity()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal-overlay" id="product-modal">
+  <div class="modal">
+    <h3 id="product-modal-title">Add Product</h3>
+    <input type="hidden" id="product-id">
+    <div class="form-group"><label class="form-label">Product Name *</label><input id="product-name" class="form-input" placeholder="Signed Jersey" required></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Celebrity *</label>
+        <select id="product-celebrity" class="form-select"><option value="">Select celebrity…</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select id="product-category" class="form-select">
+          <option value="merchandise">Merchandise</option><option value="digital">Digital</option>
+          <option value="experience">Experience</option><option value="donation">Donation</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Price (USD) *</label><input id="product-price" class="form-input" type="number" min="0" step="0.01" placeholder="29.99" required></div>
+      <div class="form-group"><label class="form-label">Stock</label><input id="product-stock" class="form-input" type="number" min="0" placeholder="100"></div>
+    </div>
+    <label class="form-check"><input type="checkbox" id="product-unlimited"> Unlimited stock</label>
+    <div class="form-group" style="margin-top:0.75rem"><label class="form-label">Description *</label><textarea id="product-description" class="form-textarea" placeholder="Product description..." required></textarea></div>
+    <div class="form-group"><label class="form-label">Images (up to 5)</label><input id="product-images" class="form-input" type="file" accept="image/*" multiple></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
+      <button class="btn btn-gold" id="product-save-btn" onclick="saveProduct()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  // Guard: admin only
+  if (!Auth.isLoggedIn()) { window.location.href = '/login.html'; }
+  const user = Auth.getUser();
+  if (user?.role !== 'admin') { showToast('Admin access required', 'error'); setTimeout(() => window.location.href = '/', 1500); }
+  document.getElementById('admin-name').textContent = user?.name || 'Admin';
+
+  function logout() { Auth.logout(); }
+
+  const panelTitles = { dashboard: 'Dashboard', celebrities: 'Celebrities', products: 'Products', orders: 'Orders' };
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item')[['dashboard','celebrities','products','orders'].indexOf(name)]?.classList.add('active');
+    document.getElementById('panel-title').textContent = panelTitles[name];
+    if (name === 'celebrities') loadCelebrities();
+    if (name === 'products') loadProducts();
+    if (name === 'orders') loadOrders();
+    if (name === 'dashboard') loadDashboard();
+  }
+
+  // ── Dashboard ─────────────────────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const [celebs, products, ordersData] = await Promise.all([
+        API.get('/celebrities'), API.get('/products'), API.get('/orders?limit=100')
+      ]);
+      document.getElementById('stat-celebs').textContent = celebs.length;
+      document.getElementById('stat-products').textContent = products.length;
+      const orders = ordersData.orders || [];
+      document.getElementById('stat-orders').textContent = orders.length;
+      const revenue = orders.filter(o => o.paymentStatus === 'paid').reduce((s, o) => s + o.total, 0);
+      document.getElementById('stat-revenue').textContent = '$' + revenue.toFixed(2);
+      const tbody = document.getElementById('recent-orders-table');
+      tbody.innerHTML = orders.slice(0, 10).map(o => `
+        <tr>
+          <td style="font-family:monospace;font-size:0.75rem">${o._id?.slice(-8)}</td>
+          <td>${o.user?.name || o.guestEmail || 'Guest'}</td>
+          <td>$${o.total?.toFixed(2)}</td>
+          <td>${o.paymentMethod === 'bitcoin' ? '₿ Bitcoin' : '💳 Card'}</td>
+          <td><span class="badge ${statusBadge(o.status)}">${o.status}</span></td>
+        </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-muted)">No orders yet</td></tr>';
+    } catch(e) { showToast('Failed to load dashboard', 'error'); }
+  }
+
+  // ── Celebrities ───────────────────────────────────────────────────────────
+  let celebsList = [];
+  async function loadCelebrities() {
+    try {
+      celebsList = await API.get('/celebrities');
+      const tbody = document.getElementById('celebs-table');
+      tbody.innerHTML = celebsList.map(c => `
+        <tr>
+          <td><img class="thumb" src="${c.photo || '/img/placeholder.png'}" onerror="this.src='/img/placeholder.png'" alt="${c.name}"></td>
+          <td><strong>${c.name}</strong></td>
+          <td><span class="badge badge-gold">${c.category}</span></td>
+          <td>${c.featured ? '⭐' : '—'}</td>
+          <td style="display:flex;gap:0.4rem;padding-top:0.85rem">
+            <button class="btn btn-outline btn-sm" onclick='editCelebrity(${JSON.stringify(c)})'>Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCelebrity('${c._id}')">Delete</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="5" class="empty-state">No celebrities yet</td></tr>';
+    } catch(e) { showToast('Failed to load celebrities', 'error'); }
+  }
+
+  function openCelebModal(reset = true) {
+    if (reset) {
+      document.getElementById('celeb-id').value = '';
+      document.getElementById('celeb-modal-title').textContent = 'Add Celebrity';
+      ['celeb-name','celeb-slug','celeb-shortbio','celeb-bio','celeb-nationality','celeb-instagram','celeb-twitter','celeb-facebook','celeb-youtube'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('celeb-birthdate').value = '';
+      document.getElementById('celeb-featured').checked = false;
+      document.getElementById('celeb-category').value = 'music';
+    }
+    document.getElementById('celeb-modal').classList.add('open');
+  }
+  function closeCelebModal() { document.getElementById('celeb-modal').classList.remove('open'); }
+
+  function editCelebrity(c) {
+    document.getElementById('celeb-id').value = c._id;
+    document.getElementById('celeb-modal-title').textContent = 'Edit Celebrity';
+    document.getElementById('celeb-name').value = c.name;
+    document.getElementById('celeb-slug').value = c.slug;
+    document.getElementById('celeb-category').value = c.category;
+    document.getElementById('celeb-nationality').value = c.nationality || '';
+    document.getElementById('celeb-shortbio').value = c.shortBio || '';
+    document.getElementById('celeb-bio').value = c.bio;
+    document.getElementById('celeb-birthdate').value = c.birthDate ? c.birthDate.split('T')[0] : '';
+    document.getElementById('celeb-featured').checked = c.featured;
+    document.getElementById('celeb-instagram').value = c.socialLinks?.instagram || '';
+    document.getElementById('celeb-twitter').value = c.socialLinks?.twitter || '';
+    document.getElementById('celeb-facebook').value = c.socialLinks?.facebook || '';
+    document.getElementById('celeb-youtube').value = c.socialLinks?.youtube || '';
+    openCelebModal(false);
+  }
+
+  async function saveCelebrity() {
+    const btn = document.getElementById('celeb-save-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+    try {
+      const id = document.getElementById('celeb-id').value;
+      const fd = new FormData();
+      const fields = {
+        name: 'celeb-name', slug: 'celeb-slug', category: 'celeb-category',
+        nationality: 'celeb-nationality', shortBio: 'celeb-shortbio', bio: 'celeb-bio',
+        birthDate: 'celeb-birthdate'
+      };
+      for (const [key, elId] of Object.entries(fields)) {
+        const val = document.getElementById(elId).value;
+        if (val) fd.append(key, val);
+      }
+      fd.append('featured', document.getElementById('celeb-featured').checked);
+      fd.append('socialLinks[instagram]', document.getElementById('celeb-instagram').value);
+      fd.append('socialLinks[twitter]', document.getElementById('celeb-twitter').value);
+      fd.append('socialLinks[facebook]', document.getElementById('celeb-facebook').value);
+      fd.append('socialLinks[youtube]', document.getElementById('celeb-youtube').value);
+      const photoFile = document.getElementById('celeb-photo').files[0];
+      const coverFile = document.getElementById('celeb-cover').files[0];
+      if (photoFile) fd.append('photo', photoFile);
+      if (coverFile) fd.append('coverPhoto', coverFile);
+
+      if (id) { await API.uploadForm('PUT', '/celebrities/' + id, fd); showToast('Celebrity updated', 'success'); }
+      else { await API.uploadForm('POST', '/celebrities', fd); showToast('Celebrity added', 'success'); }
+
+      closeCelebModal();
+      loadCelebrities();
+    } catch(e) { showToast(e.message, 'error'); }
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+
+  async function deleteCelebrity(id) {
+    if (!confirm('Remove this celebrity?')) return;
+    try { await API.del('/celebrities/' + id); showToast('Celebrity removed', 'success'); loadCelebrities(); }
+    catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ── Products ──────────────────────────────────────────────────────────────
+  async function loadProducts() {
+    try {
+      const products = await API.get('/products');
+      const tbody = document.getElementById('products-table');
+      tbody.innerHTML = products.map(p => `
+        <tr>
+          <td><img class="thumb" src="${p.images?.[0] || '/img/placeholder.png'}" onerror="this.src='/img/placeholder.png'" alt="${p.name}"></td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.celebrity?.name || '—'}</td>
+          <td class="text-gold">$${p.price.toFixed(2)}</td>
+          <td>${p.unlimited ? '∞' : p.stock}</td>
+          <td style="display:flex;gap:0.4rem;padding-top:0.85rem">
+            <button class="btn btn-outline btn-sm" onclick='editProduct(${JSON.stringify(p)})'>Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">Delete</button>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="6" class="empty-state">No products yet</td></tr>';
+    } catch(e) { showToast('Failed to load products', 'error'); }
+  }
+
+  async function openProductModal(reset = true) {
+    if (!celebsList.length) celebsList = await API.get('/celebrities').catch(() => []);
+    const sel = document.getElementById('product-celebrity');
+    sel.innerHTML = '<option value="">Select celebrity…</option>' + celebsList.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+    if (reset) {
+      document.getElementById('product-id').value = '';
+      document.getElementById('product-modal-title').textContent = 'Add Product';
+      ['product-name','product-price','product-stock','product-description'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('product-category').value = 'merchandise';
+      document.getElementById('product-unlimited').checked = false;
+    }
+    document.getElementById('product-modal').classList.add('open');
+  }
+  function closeProductModal() { document.getElementById('product-modal').classList.remove('open'); }
+
+  function editProduct(p) {
+    document.getElementById('product-id').value = p._id;
+    document.getElementById('product-modal-title').textContent = 'Edit Product';
+    document.getElementById('product-name').value = p.name;
+    document.getElementById('product-price').value = p.price;
+    document.getElementById('product-stock').value = p.stock;
+    document.getElementById('product-description').value = p.description;
+    document.getElementById('product-category').value = p.category;
+    document.getElementById('product-unlimited').checked = p.unlimited;
+    openProductModal(false).then(() => {
+      document.getElementById('product-celebrity').value = p.celebrity?._id || p.celebrity || '';
+    });
+  }
+
+  async function saveProduct() {
+    const btn = document.getElementById('product-save-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+    try {
+      const id = document.getElementById('product-id').value;
+      const fd = new FormData();
+      fd.append('name', document.getElementById('product-name').value);
+      fd.append('price', document.getElementById('product-price').value);
+      fd.append('stock', document.getElementById('product-stock').value || 0);
+      fd.append('description', document.getElementById('product-description').value);
+      fd.append('category', document.getElementById('product-category').value);
+      fd.append('celebrity', document.getElementById('product-celebrity').value);
+      fd.append('unlimited', document.getElementById('product-unlimited').checked);
+      Array.from(document.getElementById('product-images').files).forEach(f => fd.append('images', f));
+
+      if (id) { await API.uploadForm('PUT', '/products/' + id, fd); showToast('Product updated', 'success'); }
+      else { await API.uploadForm('POST', '/products', fd); showToast('Product added', 'success'); }
+
+      closeProductModal();
+      loadProducts();
+    } catch(e) { showToast(e.message, 'error'); }
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm('Remove this product?')) return;
+    try { await API.del('/products/' + id); showToast('Product removed', 'success'); loadProducts(); }
+    catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ── Orders ────────────────────────────────────────────────────────────────
+  async function loadOrders() {
+    try {
+      const { orders } = await API.get('/orders');
+      const tbody = document.getElementById('orders-table');
+      tbody.innerHTML = orders.map(o => `
+        <tr>
+          <td style="font-family:monospace;font-size:0.75rem">${o._id?.slice(-8)}</td>
+          <td>${o.user?.name || o.guestEmail || 'Guest'}</td>
+          <td class="text-gold">$${o.total?.toFixed(2)}</td>
+          <td>${o.paymentMethod === 'bitcoin' ? '₿ Bitcoin' : '💳 Card'}</td>
+          <td><span class="badge ${statusBadge(o.status)}">${o.status}</span></td>
+          <td>${new Date(o.createdAt).toLocaleDateString()}</td>
+          <td>
+            <select class="form-select" style="padding:0.3rem;font-size:0.8rem;width:130px" onchange="updateOrderStatus('${o._id}', this.value)">
+              ${['pending','processing','shipped','delivered','cancelled','refunded'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="7" class="empty-state">No orders yet</td></tr>';
+    } catch(e) { showToast('Failed to load orders', 'error'); }
+  }
+
+  async function updateOrderStatus(id, status) {
+    try { await API.put('/orders/' + id + '/status', { status }); showToast('Order updated', 'success'); }
+    catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function statusBadge(s) {
+    return { pending: 'badge-warning', processing: 'badge-gold', shipped: 'badge-gold', delivered: 'badge-success', cancelled: 'badge-danger', refunded: 'badge-danger', paid: 'badge-success' }[s] || '';
+  }
+
+  // Load dashboard on start
+  loadDashboard();
+</script>
+</body>
+</html>

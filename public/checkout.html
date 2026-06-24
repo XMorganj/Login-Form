@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — StarGifts</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="/">⭐ StarGifts</a>
+  <div class="navbar-links">
+    <a href="/celebrities.html">Celebrities</a>
+    <a href="/shop.html">Shop</a>
+  </div>
+  <div class="navbar-actions">
+    <div id="nav-actions" style="display:flex;gap:0.5rem;align-items:center"></div>
+  </div>
+</nav>
+
+<div style="max-width:1000px;margin:2rem auto;padding:0 2rem">
+  <h1 class="section-title mb-2">Checkout</h1>
+  <div id="empty-cart-msg" class="empty-state hidden">
+    <h3>Your cart is empty</h3>
+    <a href="/shop.html" class="btn btn-gold mt-3">Go Shopping</a>
+  </div>
+
+  <div id="checkout-form" class="checkout-layout">
+    <!-- Left: details -->
+    <div>
+      <h3 style="margin-bottom:1.2rem">Contact & Shipping</h3>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input id="email" class="form-input" type="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name *</label>
+          <input id="firstName" class="form-input" placeholder="John" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name *</label>
+          <input id="lastName" class="form-input" placeholder="Doe" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address Line 1 *</label>
+        <input id="line1" class="form-input" placeholder="123 Main Street" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address Line 2</label>
+        <input id="line2" class="form-input" placeholder="Apartment, suite, etc.">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">City *</label>
+          <input id="city" class="form-input" placeholder="Lagos" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">State / Region</label>
+          <input id="state" class="form-input" placeholder="Lagos State">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Postal Code</label>
+          <input id="postal" class="form-input" placeholder="100001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country *</label>
+          <input id="country" class="form-input" placeholder="Nigeria" required>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <h3 style="margin-bottom:1.2rem">Payment Method</h3>
+      <div class="payment-tabs">
+        <div class="payment-tab active" id="tab-card" onclick="switchTab('card')">💳 Debit / Credit Card</div>
+        <div class="payment-tab" id="tab-bitcoin" onclick="switchTab('bitcoin')">₿ Bitcoin</div>
+      </div>
+
+      <!-- Card payment -->
+      <div id="panel-card">
+        <div class="form-group">
+          <label class="form-label">Card Details</label>
+          <div id="stripe-card-element" style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:1rem"></div>
+          <div id="stripe-error" class="text-muted" style="margin-top:0.5rem;color:var(--accent)"></div>
+        </div>
+        <button id="pay-card-btn" class="btn btn-gold btn-block mt-2" onclick="payWithCard()">Pay with Card</button>
+      </div>
+
+      <!-- Bitcoin payment -->
+      <div id="panel-bitcoin" class="hidden">
+        <p class="text-muted mb-2">Click below to generate a Bitcoin payment address. The order will be confirmed once payment is detected on-chain.</p>
+        <button id="pay-btc-btn" class="btn btn-gold btn-block" onclick="payWithBitcoin()">Generate Bitcoin Payment</button>
+        <div id="btc-details" class="hidden">
+          <div class="bitcoin-info mt-2">
+            <p class="text-muted">Send exactly:</p>
+            <h2 id="btc-amount" class="text-gold" style="margin:0.5rem 0"></h2>
+            <p class="text-muted" style="font-size:0.85rem">to this address:</p>
+            <div class="bitcoin-address" id="btc-address"></div>
+            <div class="qr-placeholder">QR code<br>(use real QR lib in production)</div>
+            <p class="text-muted" style="font-size:0.8rem;margin-top:0.5rem">⏱ Payment expires in 15 minutes</p>
+            <a id="btc-payment-link" href="#" target="_blank" class="btn btn-outline btn-sm mt-2">Open in Wallet</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: order summary -->
+    <div>
+      <div class="order-summary-card">
+        <h3 style="margin-bottom:1rem">Order Summary</h3>
+        <div id="summary-items"></div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;font-size:0.9rem">
+          <span class="text-muted">Subtotal</span><span id="summary-subtotal"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;font-size:0.9rem">
+          <span class="text-muted">Shipping</span><span class="text-gold">Free</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:700;margin-top:0.5rem">
+          <span>Total</span><span id="summary-total" class="text-gold"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer style="margin-top:3rem"><p>© 2025 StarGifts</p></footer>
+
+<script src="/js/toast.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  let stripe, cardElement, currentTab = 'card';
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-card').classList.toggle('active', tab === 'card');
+    document.getElementById('tab-bitcoin').classList.toggle('active', tab === 'bitcoin');
+    document.getElementById('panel-card').classList.toggle('hidden', tab !== 'card');
+    document.getElementById('panel-bitcoin').classList.toggle('hidden', tab !== 'bitcoin');
+  }
+
+  function collectShipping() {
+    return {
+      fullName: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+      line1: document.getElementById('line1').value,
+      line2: document.getElementById('line2').value,
+      city: document.getElementById('city').value,
+      state: document.getElementById('state').value,
+      postalCode: document.getElementById('postal').value,
+      country: document.getElementById('country').value
+    };
+  }
+
+  function validate() {
+    const email = document.getElementById('email').value;
+    const required = ['firstName','lastName','line1','city','country'];
+    for (const id of required) {
+      if (!document.getElementById(id).value.trim()) { showToast('Please fill all required fields', 'error'); return false; }
+    }
+    if (!email.includes('@')) { showToast('Enter a valid email', 'error'); return false; }
+    return true;
+  }
+
+  async function payWithCard() {
+    if (!validate()) return;
+    const btn = document.getElementById('pay-card-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Processing…';
+    try {
+      const items = Cart.load().map(i => ({ productId: i.productId, quantity: i.quantity }));
+      const { clientSecret, orderId } = await API.post('/payments/stripe/create-intent', {
+        items, guestEmail: document.getElementById('email').value, shippingAddress: collectShipping()
+      });
+
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card: cardElement }
+      });
+
+      if (result.error) { showToast(result.error.message, 'error'); btn.disabled = false; btn.textContent = 'Pay with Card'; return; }
+
+      await API.post('/payments/stripe/confirm/' + orderId, {});
+      Cart.clear();
+      window.location.href = '/order-success.html?id=' + orderId;
+    } catch(e) {
+      showToast(e.message, 'error');
+      btn.disabled = false; btn.textContent = 'Pay with Card';
+    }
+  }
+
+  async function payWithBitcoin() {
+    if (!validate()) return;
+    const btn = document.getElementById('pay-btc-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating address…';
+    try {
+      const items = Cart.load().map(i => ({ productId: i.productId, quantity: i.quantity }));
+      const data = await API.post('/payments/bitcoin/create', {
+        items, guestEmail: document.getElementById('email').value, shippingAddress: collectShipping()
+      });
+      document.getElementById('btc-amount').textContent = (data.amountBtc || '???') + ' BTC';
+      document.getElementById('btc-address').textContent = data.bitcoinAddress || 'Address pending';
+      document.getElementById('btc-payment-link').href = data.paymentUrl || '#';
+      document.getElementById('btc-details').classList.remove('hidden');
+      btn.textContent = 'Refresh Address';
+      btn.disabled = false;
+      showToast('Bitcoin address generated — send exact amount', 'success');
+    } catch(e) {
+      showToast(e.message, 'error');
+      btn.disabled = false; btn.textContent = 'Generate Bitcoin Payment';
+    }
+  }
+
+  function renderSummary() {
+    const items = Cart.load();
+    if (!items.length) {
+      document.getElementById('empty-cart-msg').classList.remove('hidden');
+      document.getElementById('checkout-form').classList.add('hidden');
+      return;
+    }
+    const total = Cart.total();
+    document.getElementById('summary-items').innerHTML = items.map(i =>
+      `<div style="display:flex;justify-content:space-between;font-size:0.9rem;margin-bottom:0.5rem">
+        <span>${i.name} <span class="text-muted">×${i.quantity}</span></span>
+        <span>$${(i.price * i.quantity).toFixed(2)}</span>
+      </div>`).join('');
+    document.getElementById('summary-subtotal').textContent = '$' + total.toFixed(2);
+    document.getElementById('summary-total').textContent = '$' + total.toFixed(2);
+  }
+
+  async function initStripe() {
+    try {
+      const res = await fetch('/api/payments/stripe/key');
+      // We embed the publishable key via a meta tag set from .env server-side
+      // For now use the placeholder; replace with your actual pk_test_... key
+      stripe = Stripe('pk_test_placeholder');
+      const elements = stripe.elements();
+      cardElement = elements.create('card', {
+        style: { base: { color: '#f0f0f0', fontFamily: 'Segoe UI, sans-serif', fontSize: '16px', '::placeholder': { color: '#999' } }, invalid: { color: '#e94560' } }
+      });
+      cardElement.mount('#stripe-card-element');
+      cardElement.on('change', e => {
+        document.getElementById('stripe-error').textContent = e.error ? e.error.message : '';
+      });
+    } catch(e) {
+      document.getElementById('stripe-card-element').textContent = 'Card payment unavailable (configure Stripe keys)';
+    }
+  }
+
+  renderSummary();
+  initStripe();
+</script>
+</body>
+</html>
