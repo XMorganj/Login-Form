@@ -1,16 +1,10 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
 const Product = require('../models/Product');
 const { protect, adminOnly } = require('../middleware/auth');
+const { makeUpload } = require('../config/cloudinary');
 
 const router = express.Router();
-
-const storage = multer.diskStorage({
-  destination: 'uploads/products/',
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = makeUpload('stargifts/products');
 
 // Public
 router.get('/', async (req, res) => {
@@ -41,7 +35,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', protect, adminOnly, upload.array('images', 5), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files?.length) data.images = req.files.map(f => '/uploads/products/' + f.filename);
+    if (req.files?.length) data.images = req.files.map(f => f.path);
     const product = await Product.create(data);
     res.status(201).json(product);
   } catch (err) {
@@ -52,7 +46,7 @@ router.post('/', protect, adminOnly, upload.array('images', 5), async (req, res)
 router.put('/:id', protect, adminOnly, upload.array('images', 5), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files?.length) data.images = req.files.map(f => '/uploads/products/' + f.filename);
+    if (req.files?.length) data.images = req.files.map(f => f.path);
     const product = await Product.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);

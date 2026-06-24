@@ -1,16 +1,10 @@
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
 const Celebrity = require('../models/Celebrity');
 const { protect, adminOnly } = require('../middleware/auth');
+const { makeUpload } = require('../config/cloudinary');
 
 const router = express.Router();
-
-const storage = multer.diskStorage({
-  destination: 'uploads/celebrities/',
-  filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
-});
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = makeUpload('stargifts/celebrities');
 
 // Public
 router.get('/', async (req, res) => {
@@ -42,8 +36,8 @@ router.get('/:slug', async (req, res) => {
 router.post('/', protect, adminOnly, upload.fields([{ name: 'photo' }, { name: 'coverPhoto' }]), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files?.photo) data.photo = '/uploads/celebrities/' + req.files.photo[0].filename;
-    if (req.files?.coverPhoto) data.coverPhoto = '/uploads/celebrities/' + req.files.coverPhoto[0].filename;
+    if (req.files?.photo) data.photo = req.files.photo[0].path;
+    if (req.files?.coverPhoto) data.coverPhoto = req.files.coverPhoto[0].path;
     if (!data.slug) data.slug = data.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     const celebrity = await Celebrity.create(data);
@@ -56,8 +50,8 @@ router.post('/', protect, adminOnly, upload.fields([{ name: 'photo' }, { name: '
 router.put('/:id', protect, adminOnly, upload.fields([{ name: 'photo' }, { name: 'coverPhoto' }]), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files?.photo) data.photo = '/uploads/celebrities/' + req.files.photo[0].filename;
-    if (req.files?.coverPhoto) data.coverPhoto = '/uploads/celebrities/' + req.files.coverPhoto[0].filename;
+    if (req.files?.photo) data.photo = req.files.photo[0].path;
+    if (req.files?.coverPhoto) data.coverPhoto = req.files.coverPhoto[0].path;
 
     const celebrity = await Celebrity.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true });
     if (!celebrity) return res.status(404).json({ error: 'Celebrity not found' });

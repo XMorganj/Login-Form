@@ -233,10 +233,12 @@
 
   async function initStripe() {
     try {
-      const res = await fetch('/api/payments/stripe/key');
-      // We embed the publishable key via a meta tag set from .env server-side
-      // For now use the placeholder; replace with your actual pk_test_... key
-      stripe = Stripe('pk_test_placeholder');
+      const { stripePublishableKey } = await fetch('/api/config').then(r => r.json());
+      if (!stripePublishableKey || stripePublishableKey.includes('placeholder')) {
+        document.getElementById('stripe-card-element').textContent = 'Card payment unavailable — Stripe key not configured.';
+        return;
+      }
+      stripe = Stripe(stripePublishableKey);
       const elements = stripe.elements();
       cardElement = elements.create('card', {
         style: { base: { color: '#f0f0f0', fontFamily: 'Segoe UI, sans-serif', fontSize: '16px', '::placeholder': { color: '#999' } }, invalid: { color: '#e94560' } }
@@ -246,7 +248,7 @@
         document.getElementById('stripe-error').textContent = e.error ? e.error.message : '';
       });
     } catch(e) {
-      document.getElementById('stripe-card-element').textContent = 'Card payment unavailable (configure Stripe keys)';
+      document.getElementById('stripe-card-element').textContent = 'Card payment unavailable — check server configuration.';
     }
   }
 

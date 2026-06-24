@@ -20,6 +20,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// Expose safe public config to frontend
+app.get('/api/config', (req, res) => {
+  res.json({ stripePublishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '' });
+});
+
 // API routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/celebrities', require('./routes/celebrities'));
