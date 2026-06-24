@@ -53,7 +53,8 @@
         password: document.getElementById('password').value
       });
       Auth.setSession(data.token, data.user);
-      window.location.href = data.user.role === 'admin' ? '/admin/' : '/';
+      const next = new URLSearchParams(location.search).get('next');
+      window.location.href = data.user.role === 'admin' ? '/admin/' : (next || '/');
     } catch(e) {
       errEl.textContent = e.message;
       errEl.classList.remove('hidden');

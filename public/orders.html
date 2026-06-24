@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — StarGifts</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    .orders-page { max-width: 860px; margin: 2.5rem auto; padding: 0 2rem; }
+    .order-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 1.5rem; overflow: hidden;
+    }
+    .order-card-header {
+      display: flex; flex-wrap: wrap; gap: 1rem;
+      justify-content: space-between; align-items: center;
+      padding: 1rem 1.4rem; border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .order-meta { font-size: 0.82rem; color: var(--text-muted); }
+    .order-meta strong { color: var(--text); font-size: 0.9rem; }
+    .order-items { padding: 1rem 1.4rem; }
+    .order-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
+    }
+    .order-item:last-child { border-bottom: none; }
+    .order-item-img {
+      width: 56px; height: 56px; object-fit: cover;
+      border-radius: 8px; background: var(--dark3); flex-shrink: 0;
+    }
+    .order-item-name { font-size: 0.95rem; font-weight: 600; }
+    .order-item-qty { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .order-item-price { margin-left: auto; font-weight: 700; color: var(--gold); white-space: nowrap; }
+    .order-footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.9rem 1.4rem; border-top: 1px solid var(--border);
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.78rem; font-weight: 700;
+    }
+    .status-pending   { background: rgba(241,196,15,0.12); color: #f1c40f; border: 1px solid rgba(241,196,15,0.3); }
+    .status-paid      { background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
+    .status-processing{ background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid var(--border); }
+    .status-shipped   { background: rgba(52,152,219,0.12); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+    .status-delivered { background: rgba(46,204,113,0.12); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3); }
+    .status-cancelled { background: rgba(233,69,96,0.12); color: var(--accent); border: 1px solid rgba(233,69,96,0.3); }
+    .status-refunded  { background: rgba(233,69,96,0.12); color: var(--accent); border: 1px solid rgba(233,69,96,0.3); }
+    .payment-badge { font-size: 0.82rem; color: var(--text-muted); }
+    .order-total { font-size: 1.05rem; font-weight: 800; color: var(--gold); }
+    .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .filter-pill {
+      padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+      background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted);
+      cursor: pointer; transition: all var(--transition);
+    }
+    .filter-pill.active { background: rgba(201,168,76,0.12); border-color: var(--gold); color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a class="navbar-brand" href="/">⭐ StarGifts</a>
+  <div class="navbar-links">
+    <a href="/celebrities.html">Celebrities</a>
+    <a href="/shop.html">Shop</a>
+  </div>
+  <div class="navbar-actions">
+    <button class="cart-btn" onclick="Cart.openSidebar()">🛒 Cart <span class="cart-count" style="display:none">0</span></button>
+    <div id="nav-actions" style="display:flex;gap:0.5rem;align-items:center"></div>
+  </div>
+</nav>
+
+<div class="orders-page">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+    <div>
+      <h1 class="section-title">My <span>Orders</span></h1>
+      <p class="text-muted" style="margin-top:0.3rem">Your complete gift purchase history</p>
+    </div>
+    <a href="/shop.html" class="btn btn-outline">Browse More Gifts</a>
+  </div>
+
+  <div class="filter-bar">
+    <button class="filter-pill active" data-status="">All Orders</button>
+    <button class="filter-pill" data-status="pending">Pending</button>
+    <button class="filter-pill" data-status="processing">Processing</button>
+    <button class="filter-pill" data-status="shipped">Shipped</button>
+    <button class="filter-pill" data-status="delivered">Delivered</button>
+    <button class="filter-pill" data-status="cancelled">Cancelled</button>
+  </div>
+
+  <div id="orders-container">
+    <div class="empty-state"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<footer style="margin-top:3rem"><p>© 2025 StarGifts</p></footer>
+
+<!-- Cart sidebar -->
+<div class="cart-overlay" id="cart-overlay" onclick="Cart.closeSidebar()"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header"><h3>Your Cart</h3><button class="cart-close" onclick="Cart.closeSidebar()">✕</button></div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+    <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
+  </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  if (!Auth.isLoggedIn()) {
+    window.location.href = '/login.html?next=/orders.html';
+  }
+
+  let allOrders = [];
+  let activeFilter = '';
+
+  const statusIcons = {
+    pending: '⏳', paid: '✅', processing: '⚙️',
+    shipped: '🚚', delivered: '✅', cancelled: '✗', refunded: '↩'
+  };
+
+  function renderOrders(orders) {
+    const container = document.getElementById('orders-container');
+    if (!orders.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div style="font-size:3rem;margin-bottom:1rem">📦</div>
+          <h3>${activeFilter ? 'No ' + activeFilter + ' orders' : 'No orders yet'}</h3>
+          <p style="margin-bottom:1.5rem">When you buy a gift it will appear here.</p>
+          <a href="/shop.html" class="btn btn-gold">Start Shopping</a>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = orders.map(o => {
+      const date = new Date(o.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      const time = new Date(o.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      const statusClass = 'status-' + (o.paymentStatus === 'paid' && o.status === 'pending' ? 'processing' : o.status);
+      const displayStatus = o.status.charAt(0).toUpperCase() + o.status.slice(1);
+
+      return `
+        <div class="order-card">
+          <div class="order-card-header">
+            <div>
+              <div class="order-meta">Order <strong>#${o._id.slice(-8).toUpperCase()}</strong></div>
+              <div class="order-meta" style="margin-top:0.2rem">${date} at ${time}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+              <div class="payment-badge">
+                ${o.paymentMethod === 'bitcoin' ? '₿ Bitcoin' : '💳 Card'}
+              </div>
+              <span class="status-pill ${statusClass}">
+                ${statusIcons[o.status] || ''} ${displayStatus}
+              </span>
+            </div>
+          </div>
+
+          <div class="order-items">
+            ${o.items.map(item => `
+              <div class="order-item">
+                <img class="order-item-img"
+                  src="${item.product?.images?.[0] || '/img/placeholder.svg'}"
+                  alt="${item.name}"
+                  onerror="this.src='/img/placeholder.svg'">
+                <div>
+                  <div class="order-item-name">${item.name}</div>
+                  <div class="order-item-qty">Qty: ${item.quantity} &nbsp;×&nbsp; $${item.price.toFixed(2)}</div>
+                </div>
+                <div class="order-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
+              </div>`).join('')}
+          </div>
+
+          <div class="order-footer">
+            <div style="font-size:0.85rem;color:var(--text-muted)">
+              ${o.shippingAddress?.city ? `📍 ${o.shippingAddress.city}, ${o.shippingAddress.country}` : ''}
+            </div>
+            <div class="order-total">Total: $${o.total.toFixed(2)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function applyFilter(status) {
+    activeFilter = status;
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.status === status);
+    });
+    const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
+    renderOrders(filtered);
+  }
+
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => applyFilter(pill.dataset.status));
+  });
+
+  async function loadOrders() {
+    try {
+      allOrders = await API.get('/orders/my');
+      renderOrders(allOrders);
+    } catch (e) {
+      document.getElementById('orders-container').innerHTML = `
+        <div class="empty-state">
+          <h3>Could not load orders</h3>
+          <p>${e.message}</p>
+          <button class="btn btn-outline mt-3" onclick="loadOrders()">Retry</button>
+        </div>`;
+    }
+  }
+
+  loadOrders();
+</script>
+</body>
+</html>

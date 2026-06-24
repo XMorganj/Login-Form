@@ -24,6 +24,7 @@ const Auth = (() => {
     if (user) {
       navActions.innerHTML = `
         <span class="text-muted" style="font-size:0.85rem">Hi, ${user.name.split(' ')[0]}</span>
+        ${user.role === 'fan' ? '<a href="/orders.html" class="btn btn-sm" style="background:var(--card-bg);border:1px solid var(--border)">My Orders</a>' : ''}
         ${user.role === 'admin' ? '<a href="/admin/" class="btn btn-outline btn-sm">Admin</a>' : ''}
         <button class="btn btn-sm" style="background:var(--card-bg);border:1px solid var(--border)" onclick="Auth.logout()">Logout</button>
       `;
