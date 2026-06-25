@@ -747,6 +747,86 @@ function makeProducts(celeb) {
 
 // ── Seed route ───────────────────────────────────────────────────────────────
 
+const https = require('https');
+
+// Wikipedia article titles for each celebrity slug
+const WIKI_TITLES = {
+  'taylor-swift':      'Taylor_Swift',
+  'drake':             'Drake_(musician)',
+  'beyonce':           'Beyoncé',
+  'ed-sheeran':        'Ed_Sheeran',
+  'rihanna':           'Rihanna',
+  'bad-bunny':         'Bad_Bunny',
+  'adele':             'Adele',
+  'justin-bieber':     'Justin_Bieber',
+  'billie-eilish':     'Billie_Eilish',
+  'ariana-grande':     'Ariana_Grande',
+  'the-weeknd':        'The_Weeknd',
+  'post-malone':       'Post_Malone',
+  'doja-cat':          'Doja_Cat',
+  'olivia-rodrigo':    'Olivia_Rodrigo',
+  'shakira':           'Shakira',
+  'dwayne-johnson':    'Dwayne_Johnson',
+  'scarlett-johansson':'Scarlett_Johansson',
+  'leonardo-dicaprio': 'Leonardo_DiCaprio',
+  'tom-hanks':         'Tom_Hanks',
+  'meryl-streep':      'Meryl_Streep',
+  'ryan-reynolds':     'Ryan_Reynolds',
+  'zendaya':           'Zendaya',
+  'will-smith':        'Will_Smith',
+  'margot-robbie':     'Margot_Robbie',
+  'johnny-depp':       'Johnny_Depp',
+  'cristiano-ronaldo': 'Cristiano_Ronaldo',
+  'lebron-james':      'LeBron_James',
+  'serena-williams':   'Serena_Williams',
+  'lionel-messi':      'Lionel_Messi',
+  'naomi-osaka':       'Naomi_Osaka',
+  'simone-biles':      'Simone_Biles',
+  'usain-bolt':        'Usain_Bolt',
+  'neymar-jr':         'Neymar',
+  'stephen-curry':     'Stephen_Curry',
+  'kylian-mbappe':     'Kylian_Mbappé',
+  'roger-federer':     'Roger_Federer',
+  'oprah-winfrey':     'Oprah_Winfrey',
+  'kim-kardashian':    'Kim_Kardashian',
+  'jennifer-aniston':  'Jennifer_Aniston',
+  'gordon-ramsay':     'Gordon_Ramsay',
+  'ellen-degeneres':   'Ellen_DeGeneres',
+  'tyra-banks':        'Tyra_Banks',
+  'simon-cowell':      'Simon_Cowell',
+  'james-corden':      'James_Corden',
+  'mrbeast':           'MrBeast',
+  'logan-paul':        'Logan_Paul',
+  'charli-damelio':    "Charli_D'Amelio",
+  'pewdiepie':         'PewDiePie',
+  'kylie-jenner':      'Kylie_Jenner',
+  'addison-rae':       'Addison_Rae'
+};
+
+function fetchWikiPhoto(wikiTitle) {
+  return new Promise(resolve => {
+    const path = `/api/rest_v1/page/summary/${encodeURIComponent(wikiTitle)}`;
+    const req = https.get(
+      { hostname: 'en.wikipedia.org', path, headers: { 'User-Agent': 'StarGifts/1.0 (https://stargifts.com)' }, timeout: 8000 },
+      res => {
+        if (res.statusCode !== 200) { res.resume(); return resolve(null); }
+        let raw = '';
+        res.on('data', c => raw += c);
+        res.on('end', () => {
+          try {
+            const j = JSON.parse(raw);
+            const src = j.originalimage?.source || j.thumbnail?.source;
+            // Resize to 400 px wide thumbnail
+            resolve(src ? src.replace(/\/\d+px-/, '/400px-') : null);
+          } catch { resolve(null); }
+        });
+      }
+    );
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+  });
+}
+
 const CATEGORY_COLORS = {
   digital:      { bg: '1a1a2e', fg: 'c9a84c' },
   merchandise:  { bg: '0d0d0d', fg: 'c9a84c' },
@@ -767,10 +847,19 @@ router.post('/seed', protect, adminOnly, async (req, res) => {
       let celeb = await Celebrity.findOne({ slug: data.slug });
       if (!celeb) {
         const enc = encodeURIComponent(data.name);
-        data.photo = `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`;
+        const wikiTitle = WIKI_TITLES[data.slug];
+
+        // Try Wikipedia first; fall back to initials avatar
+        const wikiPhoto = wikiTitle ? await fetchWikiPhoto(wikiTitle) : null;
+        data.photo = wikiPhoto ||
+          `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`;
         data.coverPhoto = `https://placehold.co/1200x400/0d0d0d/c9a84c?text=${enc}`;
+
         celeb = await Celebrity.create(data);
         celebsCreated++;
+
+        // Small pause to be respectful to Wikipedia's API
+        if (wikiTitle) await new Promise(r => setTimeout(r, 120));
       } else {
         skipped++;
         continue;
