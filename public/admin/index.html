@@ -441,10 +441,10 @@
     document.getElementById('pw-new').value = '';
     document.getElementById('pw-confirm').value = '';
     document.getElementById('pw-error').style.display = 'none';
-    document.getElementById('password-modal').classList.add('active');
+    document.getElementById('password-modal').classList.add('open');
   }
   function closePasswordModal() {
-    document.getElementById('password-modal').classList.remove('active');
+    document.getElementById('password-modal').classList.remove('open');
   }
   async function changePassword() {
     const current = document.getElementById('pw-current').value;
