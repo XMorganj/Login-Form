@@ -1,4 +1,6 @@
 const express = require('express');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
 const Stripe = require('stripe');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
@@ -148,6 +150,19 @@ router.post('/bitcoin/create', async (req, res) => {
 
 router.post('/bitcoin/callback', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
+    const receivedSig = req.headers['signature'] || req.headers['x-signature'] || '';
+    if (process.env.COINGATE_API_TOKEN && receivedSig) {
+      const expectedSig = crypto
+        .createHmac('sha256', process.env.COINGATE_API_TOKEN)
+        .update(req.body)
+        .digest('hex');
+      const a = Buffer.from(receivedSig);
+      const b = Buffer.from(expectedSig);
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        return res.status(401).send('Invalid signature');
+      }
+    }
+
     const data = JSON.parse(req.body);
     if (data.status === 'paid') {
       const order = await Order.findById(data.order_id);
@@ -172,6 +187,21 @@ router.get('/order/:id', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate('items.product', 'name images');
     if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Logged-in user orders require the requester to be the owner
+    if (order.user) {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer '))
+        return res.status(401).json({ error: 'Authentication required' });
+      try {
+        const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+        if (decoded.id !== order.user.toString())
+          return res.status(403).json({ error: 'Access denied' });
+      } catch {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+    }
+
     res.json(order);
   } catch (err) {
     res.status(500).json({ error: err.message });
