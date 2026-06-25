@@ -47,6 +47,16 @@
         <table><thead><tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>
         <tbody id="recent-orders-table"></tbody></table>
       </div>
+      <div class="table-card" style="margin-top:1.5rem">
+        <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <strong>Sample Data</strong>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem">Populate the database with 16 celebrities and 14 products each. Safe to run multiple times — skips existing records.</div>
+          </div>
+          <button class="btn btn-gold" onclick="seedSampleData()" id="seed-btn">🌱 Seed Sample Data</button>
+        </div>
+        <div id="seed-result" style="padding:0 1.5rem;display:none"></div>
+      </div>
     </div>
 
     <!-- Celebrities -->
@@ -278,6 +288,27 @@
     if (name === 'orders') loadOrders(1);
     if (name === 'dashboard') loadDashboard();
     if (name === 'users') loadUsers();
+  }
+
+  // ── Seed ──────────────────────────────────────────────────────────────────
+  async function seedSampleData() {
+    const btn = document.getElementById('seed-btn');
+    const result = document.getElementById('seed-result');
+    btn.disabled = true;
+    btn.textContent = 'Seeding…';
+    result.style.display = 'none';
+    try {
+      const data = await API.post('/admin/seed', {});
+      result.style.display = 'block';
+      result.innerHTML = `<div style="padding:1rem 0;color:#6fcf97">${data.message}</div>`;
+      loadDashboard();
+    } catch(e) {
+      result.style.display = 'block';
+      result.innerHTML = `<div style="padding:1rem 0;color:var(--accent)">${e.message || 'Seed failed'}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🌱 Seed Sample Data';
+    }
   }
 
   // ── Dashboard ─────────────────────────────────────────────────────────────
