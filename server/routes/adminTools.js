@@ -841,31 +841,55 @@ function placeholderImg(text, cat = 'merchandise') {
 
 router.post('/seed', protect, adminOnly, async (req, res) => {
   try {
-    let celebsCreated = 0, productsCreated = 0, skipped = 0;
+    // Step 1: Bulk upsert all celebrities.
+    // $set active:true reactivates any that were soft-deleted.
+    // $setOnInsert only runs when a new document is inserted (upsert).
+    const celebBulk = CELEBRITIES.map(data => {
+      const enc = encodeURIComponent(data.name);
+      return {
+        updateOne: {
+          filter: { slug: data.slug },
+          update: {
+            $set: { active: true },
+            $setOnInsert: {
+              ...data,
+              photo: `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`,
+              coverPhoto: `https://placehold.co/1200x400/0d0d0d/c9a84c?text=${enc}`
+            }
+          },
+          upsert: true
+        }
+      };
+    });
 
-    for (const data of CELEBRITIES) {
-      let celeb = await Celebrity.findOne({ slug: data.slug });
-      if (!celeb) {
-        const enc = encodeURIComponent(data.name);
-        data.photo = `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`;
-        data.coverPhoto = `https://placehold.co/1200x400/0d0d0d/c9a84c?text=${enc}`;
-        celeb = await Celebrity.create(data);
-        celebsCreated++;
-      } else {
-        skipped++;
-      }
+    const celebResult = await Celebrity.bulkWrite(celebBulk);
 
-      // Always create any missing products, even for existing celebrities
-      const products = makeProducts(celeb);
-      for (const p of products) {
-        const exists = await Product.findOne({ celebrity: celeb._id, name: p.name });
-        if (!exists) { await Product.create(p); productsCreated++; }
+    // Step 2: Fetch all celebrities to get their current _ids.
+    const allCelebs = await Celebrity.find({ slug: { $in: CELEBRITIES.map(c => c.slug) } });
+
+    // Step 3: Bulk upsert all products — only insert if (celebrity, name) pair is new.
+    const productOps = [];
+    for (const celeb of allCelebs) {
+      for (const p of makeProducts(celeb)) {
+        productOps.push({
+          updateOne: {
+            filter: { celebrity: celeb._id, name: p.name },
+            update: { $setOnInsert: p },
+            upsert: true
+          }
+        });
       }
     }
 
+    const prodResult = await Product.bulkWrite(productOps, { ordered: false });
+
+    const celebsCreated = celebResult.upsertedCount || 0;
+    const celebsReactivated = celebResult.modifiedCount || 0;
+    const productsCreated = prodResult.upsertedCount || 0;
+
     res.json({
-      message: `Seed complete — ${celebsCreated} celebrities and ${productsCreated} products created (${skipped} celebrities already existed).`,
-      celebsCreated, productsCreated, skipped
+      message: `Seed complete — ${celebsCreated} celebrities created, ${celebsReactivated} reactivated, ${productsCreated} products added.`,
+      celebsCreated, celebsReactivated, productsCreated
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
