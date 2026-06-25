@@ -847,24 +847,15 @@ router.post('/seed', protect, adminOnly, async (req, res) => {
       let celeb = await Celebrity.findOne({ slug: data.slug });
       if (!celeb) {
         const enc = encodeURIComponent(data.name);
-        const wikiTitle = WIKI_TITLES[data.slug];
-
-        // Try Wikipedia first; fall back to initials avatar
-        const wikiPhoto = wikiTitle ? await fetchWikiPhoto(wikiTitle) : null;
-        data.photo = wikiPhoto ||
-          `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`;
+        data.photo = `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`;
         data.coverPhoto = `https://placehold.co/1200x400/0d0d0d/c9a84c?text=${enc}`;
-
         celeb = await Celebrity.create(data);
         celebsCreated++;
-
-        // Small pause to be respectful to Wikipedia's API
-        if (wikiTitle) await new Promise(r => setTimeout(r, 120));
       } else {
         skipped++;
-        continue;
       }
 
+      // Always create any missing products, even for existing celebrities
       const products = makeProducts(celeb);
       for (const p of products) {
         const exists = await Product.findOne({ celebrity: celeb._id, name: p.name });
@@ -879,6 +870,27 @@ router.post('/seed', protect, adminOnly, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Update celebrity photos from Wikipedia in the background
+router.post('/update-photos', protect, adminOnly, async (req, res) => {
+  res.json({ message: 'Photo update started in background. Refresh celebrity list in ~2 minutes to see results.' });
+
+  setImmediate(async () => {
+    try {
+      const celebs = await Celebrity.find({});
+      for (const celeb of celebs) {
+        const wikiTitle = WIKI_TITLES[celeb.slug];
+        if (!wikiTitle) continue;
+        const photo = await fetchWikiPhoto(wikiTitle);
+        if (photo) await Celebrity.findByIdAndUpdate(celeb._id, { photo });
+        await new Promise(r => setTimeout(r, 200));
+      }
+      console.log('Background photo update complete.');
+    } catch (err) {
+      console.error('Background photo update error:', err.message);
+    }
+  });
 });
 
 module.exports = router;

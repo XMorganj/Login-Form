@@ -51,9 +51,12 @@
         <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
           <div>
             <strong>Sample Data</strong>
-            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem">Populate the database with 16 celebrities and 14 products each. Safe to run multiple times — skips existing records.</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.2rem">Populate the database with 50 celebrities and 21 products each. Safe to run multiple times — creates only missing records.</div>
           </div>
-          <button class="btn btn-gold" onclick="seedSampleData()" id="seed-btn">🌱 Seed Sample Data</button>
+          <div style="display:flex;gap:0.6rem">
+            <button class="btn btn-gold" onclick="seedSampleData()" id="seed-btn">🌱 Seed Sample Data</button>
+            <button class="btn btn-outline" onclick="updatePhotos()" id="photos-btn" title="Fetch real celebrity photos from Wikipedia">📷 Update Photos</button>
+          </div>
         </div>
         <div id="seed-result" style="padding:0 1.5rem;display:none"></div>
       </div>
@@ -308,6 +311,25 @@
     } finally {
       btn.disabled = false;
       btn.textContent = '🌱 Seed Sample Data';
+    }
+  }
+
+  async function updatePhotos() {
+    const btn = document.getElementById('photos-btn');
+    const result = document.getElementById('seed-result');
+    btn.disabled = true;
+    btn.textContent = 'Starting…';
+    result.style.display = 'none';
+    try {
+      const data = await API.post('/admin/update-photos', {});
+      result.style.display = 'block';
+      result.innerHTML = `<div style="padding:1rem 0;color:#6fcf97">${data.message}</div>`;
+    } catch(e) {
+      result.style.display = 'block';
+      result.innerHTML = `<div style="padding:1rem 0;color:var(--accent)">${e.message || 'Update failed'}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '📷 Update Photos';
     }
   }
 
