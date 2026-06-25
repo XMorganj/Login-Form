@@ -34,8 +34,8 @@
     </div>
     <div class="hero-stats">
       <div>
-        <div class="hero-stat-num" id="stat-celebs">—</div>
-        <div class="hero-stat-label">Celebrities</div>
+        <div class="hero-stat-num">50+</div>
+        <div class="hero-stat-label">Top Stars</div>
       </div>
       <div>
         <div class="hero-stat-num" id="stat-products">—</div>
@@ -155,7 +155,6 @@
         API.get('/products')
       ]);
 
-      document.getElementById('stat-celebs').textContent = celebs.length || '0';
       document.getElementById('stat-products').textContent = products.length || '0';
 
       const celebEl = document.getElementById('featured-celebs');

@@ -607,123 +607,157 @@ const CELEBRITIES = [
 
 function makeProducts(celeb) {
   const id = celeb._id;
+  const img = (text, cat) => ({ images: [placeholderImg(text, cat)] });
   return [
     // ── Digital ──────────────────────────────────────────────────────────────
     {
       name: `${celeb.name} Fan Card`,
       description: `A beautifully designed digital fan card featuring ${celeb.name}. Collect it, share it, and show the world who your favourite star is. Delivered instantly to your email as a high-resolution digital card.`,
-      price: 4.99, celebrity: id, category: 'digital', unlimited: true, stock: 0
+      price: 4.99, celebrity: id, category: 'digital', unlimited: true, stock: 0,
+      ...img('Fan Card', 'digital')
     },
     {
       name: `${celeb.name} Digital Wallpaper Pack`,
       description: `A collection of 20 stunning high-resolution digital wallpapers featuring ${celeb.name}. Optimised for desktop, mobile, and tablet. Download instantly after purchase and make every screen a tribute.`,
-      price: 7.99, celebrity: id, category: 'digital', unlimited: true, stock: 0
+      price: 7.99, celebrity: id, category: 'digital', unlimited: true, stock: 0,
+      ...img('Wallpaper Pack', 'digital')
     },
     {
       name: `${celeb.name} Fan Club Membership`,
       description: `Become an official ${celeb.name} Fan Club member for one full year. Includes a digital membership card, exclusive monthly newsletters, early access to merchandise drops, and members-only giveaway entries.`,
-      price: 19.99, celebrity: id, category: 'digital', unlimited: true, stock: 0
+      price: 19.99, celebrity: id, category: 'digital', unlimited: true, stock: 0,
+      ...img('Fan Club', 'digital')
     },
     {
       name: `${celeb.name} Digital Art Print`,
       description: `A limited-edition high-resolution digital art print featuring ${celeb.name} in a bespoke illustrated portrait style. Print at home on any size paper or have it professionally framed. Available as an instant download.`,
-      price: 9.99, celebrity: id, category: 'digital', unlimited: true, stock: 0
+      price: 9.99, celebrity: id, category: 'digital', unlimited: true, stock: 0,
+      ...img('Art Print', 'digital')
     },
 
     // ── Merchandise ───────────────────────────────────────────────────────────
     {
       name: `${celeb.name} Signed Photo Print`,
       description: `A high-quality A4 printed photograph of ${celeb.name} featuring a printed signature. Delivered in a protective sleeve with a certificate of authenticity. A must-have for every serious fan.`,
-      price: 19.99, celebrity: id, category: 'merchandise', stock: 150
+      price: 19.99, celebrity: id, category: 'merchandise', stock: 150,
+      ...img('Signed Photo', 'merchandise')
     },
     {
       name: `${celeb.name} Official Fan T-Shirt`,
       description: `Show your love with this premium 100% cotton fan T-shirt. Features an exclusive ${celeb.name} graphic print. Available in sizes S–3XL. Soft-washed for a relaxed, comfortable fit.`,
-      price: 29.99, celebrity: id, category: 'merchandise', stock: 300
+      price: 29.99, celebrity: id, category: 'merchandise', stock: 300,
+      ...img('Fan T-Shirt', 'merchandise')
     },
     {
       name: `${celeb.name} Signed Poster (A3)`,
       description: `A large A3 glossy poster of ${celeb.name} with a printed signature and gold foil star border. Frame it and make it the centrepiece of any fan's room. Ships worldwide in a rigid tube.`,
-      price: 34.99, celebrity: id, category: 'merchandise', stock: 100
+      price: 34.99, celebrity: id, category: 'merchandise', stock: 100,
+      ...img('Signed Poster', 'merchandise')
     },
     {
       name: `${celeb.name} Fan Hoodie`,
       description: `A cosy, heavyweight fan hoodie featuring an exclusive ${celeb.name} design on the chest and back. Perfect for concerts, casual wear, or gifting. Pre-shrunk fleece, unisex fit, sizes S–3XL.`,
-      price: 54.99, celebrity: id, category: 'merchandise', stock: 200
+      price: 54.99, celebrity: id, category: 'merchandise', stock: 200,
+      ...img('Fan Hoodie', 'merchandise')
     },
     {
       name: `${celeb.name} Ceramic Coffee Mug`,
       description: `Start every morning as a fan with this 11 oz ceramic mug featuring a bold ${celeb.name} design. Dishwasher and microwave safe. The perfect desk companion or gift for a fellow fan.`,
-      price: 14.99, celebrity: id, category: 'merchandise', stock: 250
+      price: 14.99, celebrity: id, category: 'merchandise', stock: 250,
+      ...img('Coffee Mug', 'merchandise')
     },
     {
       name: `${celeb.name} Premium Phone Case`,
       description: `Protect your phone in style with this slim-fit ${celeb.name} fan phone case. Available for iPhone and Samsung Galaxy models. Features a high-quality printed graphic with a matte finish and raised edge protection.`,
-      price: 24.99, celebrity: id, category: 'merchandise', stock: 200
+      price: 24.99, celebrity: id, category: 'merchandise', stock: 200,
+      ...img('Phone Case', 'merchandise')
     },
     {
       name: `${celeb.name} Canvas Tote Bag`,
       description: `A sturdy 100% natural canvas tote bag featuring an exclusive ${celeb.name} print. Reinforced handles and a large interior make it perfect for shopping, the gym, or everyday use. Machine washable.`,
-      price: 17.99, celebrity: id, category: 'merchandise', stock: 150
+      price: 17.99, celebrity: id, category: 'merchandise', stock: 150,
+      ...img('Tote Bag', 'merchandise')
     },
     {
       name: `${celeb.name} Enamel Pin Set`,
       description: `A set of three collectible hard enamel pins celebrating ${celeb.name}. Each pin features a unique design: a portrait, a signature motif, and a signature quote badge. Includes a presentation backing card. Perfect for jackets, bags, or display.`,
-      price: 12.99, celebrity: id, category: 'merchandise', stock: 300
+      price: 12.99, celebrity: id, category: 'merchandise', stock: 300,
+      ...img('Enamel Pins', 'merchandise')
     },
     {
       name: `${celeb.name} Collector's Puzzle (500 pieces)`,
       description: `A 500-piece jigsaw puzzle featuring a stunning ${celeb.name} collage. Finished puzzle measures 50×37 cm. High-quality matte print on thick chipboard. Presented in a sturdy box — ideal for fans of all ages.`,
-      price: 27.99, celebrity: id, category: 'merchandise', stock: 80
+      price: 27.99, celebrity: id, category: 'merchandise', stock: 80,
+      ...img('500pc Puzzle', 'merchandise')
     },
     {
       name: `${celeb.name} Collector's Bundle`,
       description: `The ultimate fan bundle: includes a signed photo print, an official fan T-shirt, a digital wallpaper pack, and a fan card — all in one discounted bundle. Ships in premium branded packaging. Limited stock.`,
-      price: 69.99, celebrity: id, category: 'merchandise', stock: 40
+      price: 69.99, celebrity: id, category: 'merchandise', stock: 40,
+      ...img("Collector's Bundle", 'merchandise')
     },
 
     // ── Experiences ───────────────────────────────────────────────────────────
     {
       name: `${celeb.name} Birthday Shoutout`,
       description: `Arrange an exclusive personalised birthday shoutout in ${celeb.name}'s style — a heartfelt video message delivered to your inbox in 3–5 business days. The perfect surprise for a superfan.`,
-      price: 49.99, celebrity: id, category: 'experience', stock: 50
+      price: 49.99, celebrity: id, category: 'experience', stock: 50,
+      ...img('Birthday Shoutout', 'experience')
     },
     {
       name: `${celeb.name} Personalised Video Message`,
       description: `Request a personal video message from ${celeb.name}'s team for any occasion — birthday, anniversary, graduation, or just to say hello. Delivered as a shareable digital file within 5 business days.`,
-      price: 149.99, celebrity: id, category: 'experience', stock: 20
+      price: 149.99, celebrity: id, category: 'experience', stock: 20,
+      ...img('Video Message', 'experience')
     },
     {
       name: `${celeb.name} VIP Meet & Greet Pass`,
       description: `The ultimate fan experience — a VIP Meet & Greet pass that grants backstage or exclusive access to meet ${celeb.name} at a selected event. Includes a photo opportunity, signed memorabilia, and a premium fan gift bag.`,
-      price: 349.99, celebrity: id, category: 'experience', stock: 5
+      price: 349.99, celebrity: id, category: 'experience', stock: 5,
+      ...img('VIP Meet & Greet', 'experience')
     },
 
     // ── Donations ─────────────────────────────────────────────────────────────
     {
       name: `${celeb.name} Digital Gift Card — $25`,
       description: `Send a $25 fan gift card in ${celeb.name}'s name. A perfect way to show your support. The gift card can be redeemed for any item in the ${celeb.name} collection on StarGifts.`,
-      price: 25.00, celebrity: id, category: 'donation', unlimited: true, stock: 0
+      price: 25.00, celebrity: id, category: 'donation', unlimited: true, stock: 0,
+      ...img('Gift Card $25', 'donation')
     },
     {
       name: `${celeb.name} Digital Gift Card — $50`,
       description: `Send a $50 fan gift card in ${celeb.name}'s name. A great gift for fellow fans or a generous way to show your love and support for ${celeb.name}.`,
-      price: 50.00, celebrity: id, category: 'donation', unlimited: true, stock: 0
+      price: 50.00, celebrity: id, category: 'donation', unlimited: true, stock: 0,
+      ...img('Gift Card $50', 'donation')
     },
     {
       name: `${celeb.name} Digital Gift Card — $100`,
       description: `Send a premium $100 fan gift card in ${celeb.name}'s name. The ultimate fan gift, perfect for birthdays, holidays, or any special occasion.`,
-      price: 100.00, celebrity: id, category: 'donation', unlimited: true, stock: 0
+      price: 100.00, celebrity: id, category: 'donation', unlimited: true, stock: 0,
+      ...img('Gift Card $100', 'donation')
     },
     {
       name: `Charity Donation in ${celeb.name}'s Name`,
       description: `Make a charitable donation of $35 in ${celeb.name}'s name to a cause close to their heart. You'll receive a personalised digital certificate to share, showing your contribution in honour of ${celeb.name}.`,
-      price: 35.00, celebrity: id, category: 'donation', unlimited: true, stock: 0
+      price: 35.00, celebrity: id, category: 'donation', unlimited: true, stock: 0,
+      ...img('Charity Donation', 'donation')
     }
   ];
 }
 
 // ── Seed route ───────────────────────────────────────────────────────────────
+
+const CATEGORY_COLORS = {
+  digital:      { bg: '1a1a2e', fg: 'c9a84c' },
+  merchandise:  { bg: '0d0d0d', fg: 'c9a84c' },
+  experience:   { bg: '1a1a2e', fg: 'e94560' },
+  donation:     { bg: '0d0d0d', fg: '6fcf97' }
+};
+
+function placeholderImg(text, cat = 'merchandise') {
+  const { bg, fg } = CATEGORY_COLORS[cat] || CATEGORY_COLORS.merchandise;
+  return `https://placehold.co/400x400/${bg}/${fg}?text=${encodeURIComponent(text)}`;
+}
 
 router.post('/seed', protect, adminOnly, async (req, res) => {
   try {
@@ -732,6 +766,9 @@ router.post('/seed', protect, adminOnly, async (req, res) => {
     for (const data of CELEBRITIES) {
       let celeb = await Celebrity.findOne({ slug: data.slug });
       if (!celeb) {
+        const enc = encodeURIComponent(data.name);
+        data.photo = `https://ui-avatars.com/api/?name=${enc}&background=1a1a2e&color=c9a84c&bold=true&size=400`;
+        data.coverPhoto = `https://placehold.co/1200x400/0d0d0d/c9a84c?text=${enc}`;
         celeb = await Celebrity.create(data);
         celebsCreated++;
       } else {
