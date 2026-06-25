@@ -25,71 +25,105 @@
 <!-- Hero -->
 <section class="hero">
   <div class="hero-content">
-    <h1>Show Your Love for Your <span>Favourite Stars</span></h1>
-    <p>Browse exclusive gifts, merchandise, and fan experiences. Pay with card or Bitcoin.</p>
+    <div class="hero-eyebrow">⭐ The #1 Celebrity Fan Store</div>
+    <h1>Show Your Love for Your<br><em>Favourite Stars</em></h1>
+    <p>Browse exclusive gifts, merchandise, and fan experiences. Pay securely with card or Bitcoin.</p>
     <div class="hero-btns">
-      <a href="/celebrities.html" class="btn btn-gold">Browse Celebrities</a>
-      <a href="/shop.html" class="btn btn-outline">Shop All Gifts</a>
+      <a href="/celebrities.html" class="btn btn-gold btn-lg">Browse Celebrities</a>
+      <a href="/shop.html" class="btn btn-ghost btn-lg">Shop All Gifts</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="hero-stat-num" id="stat-celebs">—</div>
+        <div class="hero-stat-label">Celebrities</div>
+      </div>
+      <div>
+        <div class="hero-stat-num" id="stat-products">—</div>
+        <div class="hero-stat-label">Unique Gifts</div>
+      </div>
+      <div>
+        <div class="hero-stat-num">2</div>
+        <div class="hero-stat-label">Payment Methods</div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Featured celebrities -->
-<div class="section">
-  <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.4rem">
-    <h2 class="section-title">Featured <span>Celebrities</span></h2>
-    <a href="/celebrities.html" class="text-gold" style="font-size:0.9rem">View all →</a>
+<!-- Featured Celebrities -->
+<section class="section">
+  <div class="section-header">
+    <div>
+      <h2 class="section-title">Featured <span>Celebrities</span></h2>
+      <p class="section-sub">Your favourite stars, all in one place</p>
+    </div>
+    <a href="/celebrities.html" class="section-link">View all →</a>
   </div>
-  <p class="section-sub">Your favourite stars, all in one place</p>
   <div id="featured-celebs" class="grid grid-3">
     <div class="empty-state"><div class="spinner"></div></div>
   </div>
+</section>
+
+<!-- Features strip -->
+<div class="features-strip">
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">💳</div>
+      <div>
+        <div class="feature-title">Multiple Payment Options</div>
+        <div class="feature-desc">Pay securely with debit/credit card via Stripe, or send Bitcoin directly.</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⭐</div>
+      <div>
+        <div class="feature-title">Exclusive Merchandise</div>
+        <div class="feature-desc">Official and fan-curated gifts for celebrities across music, film, and sports.</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <div>
+        <div class="feature-title">Safe & Secure</div>
+        <div class="feature-desc">All card payments via Stripe. Bitcoin transactions are on-chain and verifiable.</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🚚</div>
+      <div>
+        <div class="feature-title">Worldwide Shipping</div>
+        <div class="feature-desc">We deliver fan gifts to wherever your favourite stars need them.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Featured products -->
-<div class="section" style="background:rgba(255,255,255,0.02);padding-top:3rem;padding-bottom:3rem;max-width:100%;margin-top:2rem">
-  <div style="max-width:1200px;margin:0 auto">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.4rem">
+<!-- Popular Gifts -->
+<section class="section">
+  <div class="section-header">
+    <div>
       <h2 class="section-title">Popular <span>Gifts</span></h2>
-      <a href="/shop.html" class="text-gold" style="font-size:0.9rem">Shop all →</a>
+      <p class="section-sub">Handpicked gifts fans love to send</p>
     </div>
-    <p class="section-sub">Handpicked gifts your favourite stars would love to receive</p>
-    <div id="featured-products" class="grid grid-4">
-      <div class="empty-state"><div class="spinner"></div></div>
-    </div>
+    <a href="/shop.html" class="section-link">Shop all →</a>
   </div>
-</div>
-
-<!-- Why us -->
-<div class="section text-center" style="padding-top:3rem">
-  <h2 class="section-title mb-2">Why <span>StarGifts?</span></h2>
-  <div class="grid grid-3" style="margin-top:2rem;text-align:left">
-    <div class="card" style="cursor:default">
-      <div class="card-body">
-        <div style="font-size:2rem;margin-bottom:0.8rem">💳</div>
-        <div class="card-title">Multiple Payment Options</div>
-        <div class="card-sub">Pay securely with debit/credit card via Stripe, or send Bitcoin directly.</div>
-      </div>
-    </div>
-    <div class="card" style="cursor:default">
-      <div class="card-body">
-        <div style="font-size:2rem;margin-bottom:0.8rem">⭐</div>
-        <div class="card-title">Exclusive Merchandise</div>
-        <div class="card-sub">Official and fan-curated gifts for hundreds of celebrities across music, film, and sports.</div>
-      </div>
-    </div>
-    <div class="card" style="cursor:default">
-      <div class="card-body">
-        <div style="font-size:2rem;margin-bottom:0.8rem">🔒</div>
-        <div class="card-title">Safe & Secure</div>
-        <div class="card-sub">All card payments are processed via Stripe. Bitcoin transactions are on-chain and verifiable.</div>
-      </div>
-    </div>
+  <div id="featured-products" class="grid grid-4">
+    <div class="empty-state"><div class="spinner"></div></div>
   </div>
-</div>
+</section>
 
 <footer>
-  <p>© 2025 StarGifts. All rights reserved. &nbsp;|&nbsp; <a href="/celebrities.html">Celebrities</a> &nbsp;|&nbsp; <a href="/shop.html">Shop</a> &nbsp;|&nbsp; <a href="/login.html">Login</a></p>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">⭐ StarGifts</div>
+      <div class="footer-copy">© 2025 StarGifts. All rights reserved.</div>
+    </div>
+    <div class="footer-links">
+      <a href="/celebrities.html">Celebrities</a>
+      <a href="/shop.html">Shop</a>
+      <a href="/login.html">Login</a>
+      <a href="/register.html">Sign Up</a>
+    </div>
+  </div>
 </footer>
 
 <!-- Cart sidebar -->
@@ -101,7 +135,10 @@
   </div>
   <div class="cart-items" id="cart-items"></div>
   <div class="cart-footer">
-    <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+    <div class="cart-total-row">
+      <span class="cart-total-label">Total</span>
+      <span class="cart-total-val" id="cart-total">$0.00</span>
+    </div>
     <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
   </div>
 </div>
@@ -118,41 +155,52 @@
         API.get('/products')
       ]);
 
+      document.getElementById('stat-celebs').textContent = celebs.length || '0';
+      document.getElementById('stat-products').textContent = products.length || '0';
+
       const celebEl = document.getElementById('featured-celebs');
       if (celebs.length) {
         celebEl.innerHTML = celebs.slice(0, 6).map(c => `
           <a href="/celebrity.html?slug=${c.slug}" class="card" style="text-decoration:none;color:inherit">
-            <img class="card-img" src="${c.photo || '/img/placeholder.png'}" alt="${c.name}" onerror="this.src='/img/placeholder.png'">
-            <div class="card-body">
-              <div class="card-title">${c.name}</div>
-              <div class="card-sub">${c.nationality || ''} &nbsp; <span class="badge badge-gold">${c.category}</span></div>
-              <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.4rem">${c.shortBio || ''}</div>
+            <div class="card-img-wrap" style="position:relative">
+              <img class="card-img celeb-card-img" src="${c.photo || '/img/placeholder.svg'}" alt="${c.name}" onerror="this.src='/img/placeholder.svg'">
+              <div class="celeb-card-overlay">
+                <div class="celeb-card-name">${c.name}</div>
+                <div class="celeb-card-cat">${c.category}${c.nationality ? ' · ' + c.nationality : ''}</div>
+              </div>
+            </div>
+            <div class="celeb-card-body">
+              <div class="celeb-card-bio">${c.shortBio || c.bio?.substring(0,90) + '...' || ''}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                ${c.featured ? '<span class="badge badge-gold">⭐ Featured</span>' : '<span></span>'}
+                <span style="font-size:0.8rem;color:var(--text-muted)">View profile →</span>
+              </div>
             </div>
           </a>`).join('');
       } else {
-        celebEl.innerHTML = '<div class="empty-state"><h3>No celebrities yet</h3><p>Check back soon!</p></div>';
+        celebEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🌟</div><h3>No celebrities yet</h3><p>Check back soon!</p></div>';
       }
 
       const prodEl = document.getElementById('featured-products');
       if (products.length) {
         prodEl.innerHTML = products.slice(0, 8).map(p => `
           <div class="card">
-            <img class="card-img" src="${p.images?.[0] || '/img/placeholder.png'}" alt="${p.name}" onerror="this.src='/img/placeholder.png'">
+            <div class="card-img-wrap">
+              <img class="card-img" src="${p.images?.[0] || '/img/placeholder.svg'}" alt="${p.name}" onerror="this.src='/img/placeholder.svg'">
+            </div>
             <div class="card-body">
+              <div class="card-label">${p.celebrity?.name || 'Gift'}</div>
               <div class="card-title">${p.name}</div>
-              <div class="card-sub">${p.celebrity?.name || ''}</div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.8rem">
+              <div class="card-footer">
                 <div class="card-price">$${p.price.toFixed(2)}</div>
-                <button class="btn btn-gold btn-sm" onclick='Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
+                <button class="btn btn-gold btn-sm" onclick='event.stopPropagation();Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
               </div>
             </div>
           </div>`).join('');
       } else {
-        prodEl.innerHTML = '<div class="empty-state"><h3>No products yet</h3></div>';
+        prodEl.innerHTML = '<div class="empty-state"><div class="empty-icon">🎁</div><h3>No products yet</h3></div>';
       }
-    } catch (e) {
-      console.error(e);
-    }
+    } catch(e) { console.error(e); }
   }
   loadFeatured();
 </script>

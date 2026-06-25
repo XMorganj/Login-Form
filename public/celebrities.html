@@ -10,7 +10,7 @@
 <nav class="navbar">
   <a class="navbar-brand" href="/">⭐ StarGifts</a>
   <div class="navbar-links">
-    <a href="/celebrities.html" class="text-gold">Celebrities</a>
+    <a href="/celebrities.html" class="active">Celebrities</a>
     <a href="/shop.html">Shop</a>
   </div>
   <div class="navbar-actions">
@@ -19,19 +19,25 @@
   </div>
 </nav>
 
-<div class="section">
-  <h1 class="section-title">All <span>Celebrities</span></h1>
-  <p class="section-sub">Browse and support your favourite stars</p>
+<div class="page-header">
+  <h1>All <span class="text-gold">Celebrities</span></h1>
+  <p class="text-muted mt-1">Browse and support your favourite stars</p>
+</div>
 
-  <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap;align-items:center">
-    <input id="search" class="form-input" style="max-width:260px" placeholder="Search celebrities..." oninput="loadCelebs()">
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-      <button class="btn btn-sm btn-outline filter-btn active" data-cat="">All</button>
-      <button class="btn btn-sm btn-outline filter-btn" data-cat="music">Music</button>
-      <button class="btn btn-sm btn-outline filter-btn" data-cat="film">Film</button>
-      <button class="btn btn-sm btn-outline filter-btn" data-cat="sports">Sports</button>
-      <button class="btn btn-sm btn-outline filter-btn" data-cat="tv">TV</button>
-      <button class="btn btn-sm btn-outline filter-btn" data-cat="other">Other</button>
+<div class="section" style="padding-top:2rem">
+  <!-- Search + Filters -->
+  <div style="display:flex;flex-direction:column;gap:1.2rem;margin-bottom:2.5rem">
+    <div class="search-wrap" style="max-width:380px">
+      <span class="search-icon">🔍</span>
+      <input id="search" class="search-input" placeholder="Search celebrities..." oninput="loadCelebs()">
+    </div>
+    <div class="filter-bar">
+      <button class="filter-pill active" data-cat="">All Categories</button>
+      <button class="filter-pill" data-cat="music">🎵 Music</button>
+      <button class="filter-pill" data-cat="film">🎬 Film</button>
+      <button class="filter-pill" data-cat="sports">⚽ Sports</button>
+      <button class="filter-pill" data-cat="tv">📺 TV</button>
+      <button class="filter-pill" data-cat="other">✨ Other</button>
     </div>
   </div>
 
@@ -41,7 +47,15 @@
 </div>
 
 <footer>
-  <p>© 2025 StarGifts</p>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand">⭐ StarGifts</div>
+      <div class="footer-copy">© 2025 StarGifts. All rights reserved.</div>
+    </div>
+    <div class="footer-links">
+      <a href="/">Home</a><a href="/shop.html">Shop</a><a href="/login.html">Login</a>
+    </div>
+  </div>
 </footer>
 
 <div class="cart-overlay" id="cart-overlay" onclick="Cart.closeSidebar()"></div>
@@ -49,7 +63,7 @@
   <div class="cart-header"><h3>Your Cart</h3><button class="cart-close" onclick="Cart.closeSidebar()">✕</button></div>
   <div class="cart-items" id="cart-items"></div>
   <div class="cart-footer">
-    <div class="cart-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+    <div class="cart-total-row"><span class="cart-total-label">Total</span><span class="cart-total-val" id="cart-total">$0.00</span></div>
     <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
   </div>
 </div>
@@ -61,9 +75,9 @@
 <script>
   let activeCategory = '';
 
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+  document.querySelectorAll('.filter-pill').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'btn-gold'));
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeCategory = btn.dataset.cat;
       loadCelebs();
@@ -79,26 +93,28 @@
       const celebs = await API.get('/celebrities?' + params);
       const el = document.getElementById('celebs-grid');
       if (!celebs.length) {
-        el.innerHTML = '<div class="empty-state"><h3>No celebrities found</h3></div>';
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon">🌟</div><h3>No celebrities found</h3><p>Try a different search or category</p></div>';
         return;
       }
       el.innerHTML = celebs.map(c => `
         <a href="/celebrity.html?slug=${c.slug}" class="card" style="text-decoration:none;color:inherit">
-          <img class="card-img" src="${c.photo || '/img/placeholder.png'}" alt="${c.name}" onerror="this.src='/img/placeholder.png'" style="height:240px">
-          <div class="card-body">
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
-              <div class="card-title" style="margin:0">${c.name}</div>
-              ${c.featured ? '<span class="badge badge-gold">⭐ Featured</span>' : ''}
+          <div class="card-img-wrap" style="position:relative">
+            <img class="card-img celeb-card-img" src="${c.photo || '/img/placeholder.svg'}" alt="${c.name}" onerror="this.src='/img/placeholder.svg'">
+            <div class="celeb-card-overlay">
+              <div class="celeb-card-name">${c.name}</div>
+              <div class="celeb-card-cat">${c.category}${c.nationality ? ' · ' + c.nationality : ''}</div>
             </div>
-            <div class="card-sub">${c.nationality || ''} &nbsp; <span class="badge badge-accent">${c.category}</span></div>
-            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;line-height:1.5">${c.shortBio || c.bio?.substring(0, 100) + '...' || ''}</div>
+            ${c.featured ? '<div style="position:absolute;top:1rem;right:1rem"><span class="badge badge-gold">⭐ Featured</span></div>' : ''}
+          </div>
+          <div class="celeb-card-body">
+            <div class="celeb-card-bio">${c.shortBio || c.bio?.substring(0,100) + '...' || 'View full profile'}</div>
+            <div style="font-size:0.8rem;color:var(--gold);font-weight:600">View profile & gifts →</div>
           </div>
         </a>`).join('');
     } catch(e) {
       document.getElementById('celebs-grid').innerHTML = '<div class="empty-state"><h3>Failed to load</h3></div>';
     }
   }
-
   loadCelebs();
 </script>
 </body>
