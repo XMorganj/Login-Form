@@ -33,7 +33,7 @@ router.post('/login', async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password)))
+    if (!user || user.active === false || !(await user.comparePassword(password)))
       return res.status(401).json({ error: 'Invalid credentials' });
 
     const token = signToken(user._id);

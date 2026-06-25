@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product — StarGifts</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="/">⭐ StarGifts</a>
+  <div class="navbar-links">
+    <a href="/celebrities.html">Celebrities</a>
+    <a href="/shop.html">Shop</a>
+  </div>
+  <div class="navbar-actions">
+    <button class="cart-btn" onclick="Cart.openSidebar()">🛒 Cart <span class="cart-count" style="display:none">0</span></button>
+    <div id="nav-actions" style="display:flex;gap:0.5rem;align-items:center"></div>
+  </div>
+</nav>
+
+<div id="page-content" style="max-width:1000px;margin:3rem auto;padding:0 2rem">
+  <div class="empty-state" style="padding:6rem 2rem"><div class="spinner"></div></div>
+</div>
+
+<div class="cart-overlay" id="cart-overlay" onclick="Cart.closeSidebar()"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header"><h3>Your Cart</h3><button class="cart-close" onclick="Cart.closeSidebar()">✕</button></div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total-row"><span class="cart-total-label">Total</span><span class="cart-total-val" id="cart-total">$0.00</span></div>
+    <a href="/checkout.html" class="btn btn-gold btn-block">Checkout</a>
+  </div>
+</div>
+
+<script src="/js/toast.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/cart.js"></script>
+<script>
+  const productId = new URLSearchParams(location.search).get('id');
+
+  async function loadProduct() {
+    if (!productId) { window.location.href = '/shop.html'; return; }
+    try {
+      const p = await API.get('/products/' + productId);
+      document.title = `${p.name} — StarGifts`;
+
+      let imgIdx = 0;
+      const images = p.images?.length ? p.images : ['/img/placeholder.svg'];
+
+      document.getElementById('page-content').innerHTML = `
+        <a href="/shop.html" style="color:var(--text-muted);font-size:0.85rem;display:inline-block;margin-bottom:1.5rem">← Back to Shop</a>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start">
+          <!-- Images -->
+          <div>
+            <div style="border-radius:16px;overflow:hidden;aspect-ratio:1;background:var(--bg3)">
+              <img id="main-img" src="${images[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.src='/img/placeholder.svg'">
+            </div>
+            ${images.length > 1 ? `
+            <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+              ${images.map((img, i) => `
+                <img src="${img}" alt="Image ${i+1}" onclick="document.getElementById('main-img').src='${img}'"
+                  style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid ${i===0?'var(--gold)':'transparent'};transition:border-color 0.2s"
+                  onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='${i===0?'var(--gold)':'transparent'}'"
+                  onerror="this.style.display='none'">`).join('')}
+            </div>` : ''}
+          </div>
+
+          <!-- Details -->
+          <div>
+            ${p.celebrity ? `<a href="/celebrity.html?slug=${p.celebrity.slug}" class="badge badge-gold" style="font-size:0.8rem;margin-bottom:0.75rem;display:inline-block;text-decoration:none">⭐ ${p.celebrity.name}</a>` : ''}
+            <h1 style="font-size:2rem;font-weight:800;margin-bottom:0.75rem;line-height:1.2">${p.name}</h1>
+            <div class="badge" style="background:rgba(255,255,255,0.07);color:var(--text-muted);margin-bottom:1.25rem">${p.category}</div>
+            <div style="font-size:2.2rem;font-weight:900;color:var(--gold);margin-bottom:1.5rem">$${p.price.toFixed(2)}</div>
+            <p style="color:var(--text-muted);line-height:1.7;margin-bottom:2rem">${p.description || ''}</p>
+
+            <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+              <div style="display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+                <button onclick="changeQty(-1)" style="padding:0.6rem 1rem;background:none;border:none;color:var(--text);font-size:1.1rem;cursor:pointer">−</button>
+                <span id="qty" style="padding:0 1rem;font-weight:600;min-width:2rem;text-align:center">1</span>
+                <button onclick="changeQty(1)" style="padding:0.6rem 1rem;background:none;border:none;color:var(--text);font-size:1.1rem;cursor:pointer">+</button>
+              </div>
+              ${!p.unlimited ? `<span style="font-size:0.85rem;color:var(--text-muted)">${p.stock > 0 ? p.stock + ' in stock' : '⚠ Out of stock'}</span>` : '<span style="font-size:0.85rem;color:var(--text-muted)">In stock</span>'}
+            </div>
+
+            <button class="btn btn-gold btn-lg btn-block" id="add-btn" onclick="addToCart()"
+              ${(!p.unlimited && p.stock === 0) ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''}>
+              🛒 Add to Cart
+            </button>
+            <a href="/checkout.html" class="btn btn-outline btn-block" style="margin-top:0.75rem">Buy Now → Checkout</a>
+          </div>
+        </div>
+
+        ${p.celebrity ? `
+        <div style="margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border)">
+          <h3 style="margin-bottom:1.25rem">About <span style="color:var(--gold)">${p.celebrity.name}</span></h3>
+          <a href="/celebrity.html?slug=${p.celebrity.slug}" class="btn btn-outline">View Celebrity Profile & More Gifts →</a>
+        </div>` : ''}
+
+        <footer style="margin-top:4rem">
+          <div class="footer-inner">
+            <div>
+              <div class="footer-brand">⭐ StarGifts</div>
+              <div class="footer-copy">© 2017–2025 StarGifts. All rights reserved.</div>
+            </div>
+            <div class="footer-links">
+              <a href="/">Home</a>
+              <a href="/celebrities.html">Celebrities</a>
+              <a href="/shop.html">Shop</a>
+            </div>
+          </div>
+        </footer>
+      `;
+
+      // Store product for cart
+      window._product = p;
+    } catch(e) {
+      document.getElementById('page-content').innerHTML = '<div class="empty-state"><h3>Product not found</h3><a href="/shop.html" class="btn btn-outline mt-3">Back to Shop</a></div>';
+    }
+  }
+
+  function changeQty(delta) {
+    const el = document.getElementById('qty');
+    const p = window._product;
+    let q = parseInt(el.textContent) + delta;
+    if (q < 1) q = 1;
+    if (!p.unlimited && q > p.stock) q = p.stock;
+    el.textContent = q;
+  }
+
+  function addToCart() {
+    const p = window._product;
+    const qty = parseInt(document.getElementById('qty').textContent);
+    for (let i = 0; i < qty; i++) Cart.add(p);
+    showToast(`${p.name} added to cart!`, 'success');
+  }
+
+  loadProduct();
+</script>
+</body>
+</html>

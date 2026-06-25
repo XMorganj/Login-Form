@@ -1,6 +1,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
@@ -44,9 +46,16 @@ async function autoSeed() {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 });
 
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  message: { error: 'Too many attempts. Please try again in 15 minutes.' },
+  standardHeaders: true, legacyHeaders: false
+});
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
@@ -56,11 +65,12 @@ app.get('/api/config', (req, res) => {
 });
 
 // API routes
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/celebrities', require('./routes/celebrities'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/users', require('./routes/users'));
 
 // Admin panel
 app.use('/admin', express.static(path.join(__dirname, '..', 'public', 'admin')));

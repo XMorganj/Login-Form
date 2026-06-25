@@ -38,6 +38,18 @@ router.get('/', protect, adminOnly, async (req, res) => {
   }
 });
 
+router.get('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('user', 'name email')
+      .populate('items.product', 'name images');
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load order' });
+  }
+});
+
 router.put('/:id/status', protect, adminOnly, async (req, res) => {
   try {
     const { status } = req.body;

@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     const filter = { active: true };
     if (category) filter.category = category;
     if (featured === 'true') filter.featured = true;
-    if (search) filter.name = { $regex: search, $options: 'i' };
+    if (search) filter.name = { $regex: search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
 
     const celebrities = await Celebrity.find(filter).sort({ featured: -1, name: 1 });
     res.json(celebrities);

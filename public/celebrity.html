@@ -43,18 +43,13 @@
   async function loadPage() {
     if (!slug) { window.location.href = '/celebrities.html'; return; }
     try {
-      const [celeb, products] = await Promise.all([
-        API.get('/celebrities/' + slug),
-        API.get('/products?celebrity=')
-      ]);
+      const celeb = await API.get('/celebrities/' + slug);
+      const celebProducts = await API.get('/products?celebrity=' + celeb._id);
 
       const socialLinks = Object.entries(celeb.socialLinks || {})
         .filter(([, v]) => v)
         .map(([k, v]) => `<a href="${v}" class="social-link" target="_blank" rel="noopener">${k.charAt(0).toUpperCase() + k.slice(1)}</a>`)
         .join('');
-
-      const allProducts = await API.get('/products');
-      const celebProducts = allProducts.filter(p => p.celebrity?._id === celeb._id || p.celebrity === celeb._id);
 
       document.title = `${celeb.name} — StarGifts`;
       document.getElementById('page-content').innerHTML = `
@@ -77,14 +72,16 @@
           ${celebProducts.length
             ? `<div class="grid grid-4" style="margin-top:1rem">
                 ${celebProducts.map(p => `
-                  <div class="card">
-                    <img class="card-img" src="${p.images?.[0] || '/img/placeholder.png'}" alt="${p.name}" onerror="this.src='/img/placeholder.png'">
+                  <div class="card" onclick="window.location='/product.html?id=${p._id}'" style="cursor:pointer">
+                    <div class="card-img-wrap">
+                      <img class="card-img" src="${p.images?.[0] || '/img/placeholder.svg'}" alt="${p.name}" onerror="this.src='/img/placeholder.svg'">
+                    </div>
                     <div class="card-body">
                       <div class="card-title">${p.name}</div>
                       <div class="card-sub">${p.description?.substring(0, 60)}...</div>
-                      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.8rem">
+                      <div class="card-footer">
                         <div class="card-price">$${p.price.toFixed(2)}</div>
-                        <button class="btn btn-gold btn-sm" onclick='Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
+                        <button class="btn btn-gold btn-sm" onclick='event.stopPropagation();Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
                       </div>
                     </div>
                   </div>`).join('')}

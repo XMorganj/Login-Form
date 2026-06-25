@@ -29,7 +29,7 @@
   <div style="display:flex;flex-direction:column;gap:1.2rem;margin-bottom:2.5rem">
     <div class="search-wrap" style="max-width:380px">
       <span class="search-icon">🔍</span>
-      <input id="search" class="search-input" placeholder="Search celebrities..." oninput="loadCelebs()">
+      <input id="search" class="search-input" placeholder="Search celebrities..." oninput="debouncedLoad()">
     </div>
     <div class="filter-bar">
       <button class="filter-pill active" data-cat="">All Categories</button>
@@ -115,6 +115,8 @@
       document.getElementById('celebs-grid').innerHTML = '<div class="empty-state"><h3>Failed to load</h3></div>';
     }
   }
+  let _debounceTimer;
+  function debouncedLoad() { clearTimeout(_debounceTimer); _debounceTimer = setTimeout(loadCelebs, 300); }
   loadCelebs();
 </script>
 </body>

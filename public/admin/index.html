@@ -16,6 +16,7 @@
     <div class="nav-item" onclick="showPanel('celebrities')">🌟 Celebrities</div>
     <div class="nav-item" onclick="showPanel('products')">🎁 Products</div>
     <div class="nav-item" onclick="showPanel('orders')">📦 Orders</div>
+    <div class="nav-item" onclick="showPanel('users')">👥 Users</div>
   </nav>
   <div class="sidebar-footer">
     <div id="admin-name" style="margin-bottom:0.5rem;font-weight:600"></div>
@@ -52,7 +53,10 @@
     <div class="panel" id="panel-celebrities">
       <div class="section-header">
         <h3>Manage Celebrities</h3>
-        <button class="btn btn-gold" onclick="openCelebModal()">+ Add Celebrity</button>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <input id="celeb-search" class="form-input" style="width:210px" placeholder="Search celebrities..." oninput="filterCelebrities()">
+          <button class="btn btn-gold" onclick="openCelebModal()">+ Add Celebrity</button>
+        </div>
       </div>
       <div class="table-card">
         <table><thead><tr><th>Photo</th><th>Name</th><th>Category</th><th>Featured</th><th>Actions</th></tr></thead>
@@ -64,7 +68,10 @@
     <div class="panel" id="panel-products">
       <div class="section-header">
         <h3>Manage Products</h3>
-        <button class="btn btn-gold" onclick="openProductModal()">+ Add Product</button>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <input id="product-search" class="form-input" style="width:210px" placeholder="Search products..." oninput="filterProducts()">
+          <button class="btn btn-gold" onclick="openProductModal()">+ Add Product</button>
+        </div>
       </div>
       <div class="table-card">
         <table><thead><tr><th>Image</th><th>Name</th><th>Celebrity</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
@@ -74,11 +81,62 @@
 
     <!-- Orders -->
     <div class="panel" id="panel-orders">
-      <div class="section-header"><h3>All Orders</h3></div>
+      <div class="section-header" style="flex-wrap:wrap;gap:1rem">
+        <h3>All Orders <span id="orders-count" style="font-size:0.8rem;color:var(--text-muted);font-weight:400"></span></h3>
+        <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
+          <input id="order-search" class="form-input" style="width:190px" placeholder="Search email / ID..." oninput="loadOrders(1)">
+          <select id="order-status-filter" class="form-select" style="width:140px" onchange="loadOrders(1)">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <select id="order-payment-filter" class="form-select" style="width:130px" onchange="loadOrders(1)">
+            <option value="">All Payments</option>
+            <option value="card">Card</option>
+            <option value="bitcoin">Bitcoin</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="exportOrdersCSV()">📥 Export CSV</button>
+        </div>
+      </div>
       <div class="table-card">
-        <table><thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Update</th></tr></thead>
+        <table><thead><tr><th>ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Pay Status</th><th>Order Status</th><th>Date</th><th>Update</th></tr></thead>
         <tbody id="orders-table"></tbody></table>
       </div>
+      <div id="orders-pagination" style="display:flex;gap:0.5rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap"></div>
+    </div>
+
+    <!-- Users Panel -->
+    <div class="panel" id="panel-users">
+      <div class="section-header">
+        <h3>Manage Users <span id="users-count" style="font-size:0.8rem;color:var(--text-muted);font-weight:400"></span></h3>
+        <div style="display:flex;gap:0.75rem;align-items:center">
+          <input id="user-search" class="form-input" style="width:220px" placeholder="Search name or email..." oninput="loadUsers()">
+          <select id="user-role-filter" class="form-select" style="width:140px" onchange="loadUsers()">
+            <option value="">All Roles</option>
+            <option value="fan">Fans</option>
+            <option value="admin">Admins</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-card">
+        <table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="users-table"></tbody></table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Order Detail Modal -->
+<div class="modal-overlay" id="order-detail-modal">
+  <div class="modal" style="max-width:640px">
+    <h3>Order Details</h3>
+    <div id="order-detail-content"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="document.getElementById('order-detail-modal').classList.remove('open')">Close</button>
     </div>
   </div>
 </div>
@@ -129,8 +187,16 @@
     <div class="form-group"><label class="form-label">Short Bio (max 200 chars)</label><input id="celeb-shortbio" class="form-input" placeholder="One-liner description" maxlength="200"></div>
     <div class="form-group"><label class="form-label">Full Bio *</label><textarea id="celeb-bio" class="form-textarea" placeholder="Full biography..." required></textarea></div>
     <div class="form-group"><label class="form-label">Birth Date</label><input id="celeb-birthdate" class="form-input" type="date"></div>
-    <div class="form-group"><label class="form-label">Photo</label><input id="celeb-photo" class="form-input" type="file" accept="image/*"></div>
-    <div class="form-group"><label class="form-label">Cover Photo</label><input id="celeb-cover" class="form-input" type="file" accept="image/*"></div>
+    <div class="form-group">
+      <label class="form-label">Photo</label>
+      <img id="celeb-photo-preview" src="" alt="" style="display:none;width:80px;height:80px;object-fit:cover;border-radius:8px;margin-bottom:0.5rem">
+      <input id="celeb-photo" class="form-input" type="file" accept="image/*" onchange="previewImg(this,'celeb-photo-preview')">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cover Photo</label>
+      <img id="celeb-cover-preview" src="" alt="" style="display:none;width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:0.5rem">
+      <input id="celeb-cover" class="form-input" type="file" accept="image/*" onchange="previewImg(this,'celeb-cover-preview')">
+    </div>
     <div style="margin-bottom:1rem">
       <strong style="font-size:0.85rem;display:block;margin-bottom:0.75rem;color:var(--text-muted)">Social Links</strong>
       <div class="form-row">
@@ -175,7 +241,11 @@
     </div>
     <label class="form-check"><input type="checkbox" id="product-unlimited"> Unlimited stock</label>
     <div class="form-group" style="margin-top:0.75rem"><label class="form-label">Description *</label><textarea id="product-description" class="form-textarea" placeholder="Product description..." required></textarea></div>
-    <div class="form-group"><label class="form-label">Images (up to 5)</label><input id="product-images" class="form-input" type="file" accept="image/*" multiple></div>
+    <div class="form-group">
+      <label class="form-label">Images (up to 5)</label>
+      <div id="product-images-preview" style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.5rem"></div>
+      <input id="product-images" class="form-input" type="file" accept="image/*" multiple onchange="previewMultiImg(this,'product-images-preview')">
+    </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeProductModal()">Cancel</button>
       <button class="btn btn-gold" id="product-save-btn" onclick="saveProduct()">Save</button>
@@ -195,17 +265,19 @@
 
   function logout() { Auth.logout(); }
 
-  const panelTitles = { dashboard: 'Dashboard', celebrities: 'Celebrities', products: 'Products', orders: 'Orders' };
+  const panelTitles = { dashboard: 'Dashboard', celebrities: 'Celebrities', products: 'Products', orders: 'Orders', users: 'Users' };
   function showPanel(name) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('panel-' + name).classList.add('active');
-    document.querySelectorAll('.nav-item')[['dashboard','celebrities','products','orders'].indexOf(name)]?.classList.add('active');
-    document.getElementById('panel-title').textContent = panelTitles[name];
+    const navIdx = ['dashboard','celebrities','products','orders','users'].indexOf(name);
+    document.querySelectorAll('.nav-item')[navIdx]?.classList.add('active');
+    document.getElementById('panel-title').textContent = panelTitles[name] || name;
     if (name === 'celebrities') loadCelebrities();
     if (name === 'products') loadProducts();
-    if (name === 'orders') loadOrders();
+    if (name === 'orders') loadOrders(1);
     if (name === 'dashboard') loadDashboard();
+    if (name === 'users') loadUsers();
   }
 
   // ── Dashboard ─────────────────────────────────────────────────────────────
@@ -237,19 +309,26 @@
   async function loadCelebrities() {
     try {
       celebsList = await API.get('/celebrities');
-      const tbody = document.getElementById('celebs-table');
-      tbody.innerHTML = celebsList.map(c => `
-        <tr>
-          <td><img class="thumb" src="${c.photo || '/img/placeholder.png'}" onerror="this.src='/img/placeholder.png'" alt="${c.name}"></td>
-          <td><strong>${c.name}</strong></td>
-          <td><span class="badge badge-gold">${c.category}</span></td>
-          <td>${c.featured ? '⭐' : '—'}</td>
-          <td style="display:flex;gap:0.4rem;padding-top:0.85rem">
-            <button class="btn btn-outline btn-sm" onclick='editCelebrity(${JSON.stringify(c)})'>Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteCelebrity('${c._id}')">Delete</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="5" class="empty-state">No celebrities yet</td></tr>';
+      renderCelebsTable(celebsList);
     } catch(e) { showToast('Failed to load celebrities', 'error'); }
+  }
+  function filterCelebrities() {
+    const q = (document.getElementById('celeb-search')?.value || '').toLowerCase();
+    renderCelebsTable(q ? celebsList.filter(c => c.name.toLowerCase().includes(q) || c.category.includes(q)) : celebsList);
+  }
+  function renderCelebsTable(list) {
+    const tbody = document.getElementById('celebs-table');
+    tbody.innerHTML = list.map(c => `
+      <tr>
+        <td><img class="thumb" src="${c.photo || '/img/placeholder.svg'}" onerror="this.src='/img/placeholder.svg'" alt="${c.name}"></td>
+        <td><strong>${c.name}</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">${c.slug}</span></td>
+        <td><span class="badge badge-gold">${c.category}</span></td>
+        <td>${c.featured ? '⭐ Featured' : '—'}</td>
+        <td style="display:flex;gap:0.4rem;padding-top:0.85rem">
+          <button class="btn btn-outline btn-sm" onclick='editCelebrity(${JSON.stringify(c)})'>Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCelebrity('${c._id}')">Delete</button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="5" class="empty-state">No celebrities yet</td></tr>';
   }
 
   function openCelebModal(reset = true) {
@@ -280,6 +359,13 @@
     document.getElementById('celeb-twitter').value = c.socialLinks?.twitter || '';
     document.getElementById('celeb-facebook').value = c.socialLinks?.facebook || '';
     document.getElementById('celeb-youtube').value = c.socialLinks?.youtube || '';
+    // Show existing images
+    const photoPreview = document.getElementById('celeb-photo-preview');
+    const coverPreview = document.getElementById('celeb-cover-preview');
+    if (c.photo) { photoPreview.src = c.photo; photoPreview.style.display = 'block'; }
+    else photoPreview.style.display = 'none';
+    if (c.coverPhoto) { coverPreview.src = c.coverPhoto; coverPreview.style.display = 'block'; }
+    else coverPreview.style.display = 'none';
     openCelebModal(false);
   }
 
@@ -324,23 +410,31 @@
   }
 
   // ── Products ──────────────────────────────────────────────────────────────
+  let productsList = [];
   async function loadProducts() {
     try {
-      const products = await API.get('/products');
-      const tbody = document.getElementById('products-table');
-      tbody.innerHTML = products.map(p => `
-        <tr>
-          <td><img class="thumb" src="${p.images?.[0] || '/img/placeholder.png'}" onerror="this.src='/img/placeholder.png'" alt="${p.name}"></td>
-          <td><strong>${p.name}</strong></td>
-          <td>${p.celebrity?.name || '—'}</td>
-          <td class="text-gold">$${p.price.toFixed(2)}</td>
-          <td>${p.unlimited ? '∞' : p.stock}</td>
-          <td style="display:flex;gap:0.4rem;padding-top:0.85rem">
-            <button class="btn btn-outline btn-sm" onclick='editProduct(${JSON.stringify(p)})'>Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">Delete</button>
-          </td>
-        </tr>`).join('') || '<tr><td colspan="6" class="empty-state">No products yet</td></tr>';
+      productsList = await API.get('/products');
+      renderProductsTable(productsList);
     } catch(e) { showToast('Failed to load products', 'error'); }
+  }
+  function filterProducts() {
+    const q = (document.getElementById('product-search')?.value || '').toLowerCase();
+    renderProductsTable(q ? productsList.filter(p => p.name.toLowerCase().includes(q) || p.celebrity?.name?.toLowerCase().includes(q)) : productsList);
+  }
+  function renderProductsTable(list) {
+    const tbody = document.getElementById('products-table');
+    tbody.innerHTML = list.map(p => `
+      <tr>
+        <td><img class="thumb" src="${p.images?.[0] || '/img/placeholder.svg'}" onerror="this.src='/img/placeholder.svg'" alt="${p.name}"></td>
+        <td><strong>${p.name}</strong><br><span style="font-size:0.75rem;color:var(--text-muted)">${p.category}</span></td>
+        <td>${p.celebrity?.name || '—'}</td>
+        <td style="color:var(--gold);font-weight:600">$${p.price.toFixed(2)}</td>
+        <td>${p.unlimited ? '∞' : p.stock}</td>
+        <td style="display:flex;gap:0.4rem;padding-top:0.85rem">
+          <button class="btn btn-outline btn-sm" onclick='editProduct(${JSON.stringify(p)})'>Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">Delete</button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="6" class="empty-state">No products yet</td></tr>';
   }
 
   async function openProductModal(reset = true) {
@@ -367,6 +461,11 @@
     document.getElementById('product-description').value = p.description;
     document.getElementById('product-category').value = p.category;
     document.getElementById('product-unlimited').checked = p.unlimited;
+    // Show existing images
+    const preview = document.getElementById('product-images-preview');
+    preview.innerHTML = (p.images || []).map(img =>
+      `<img src="${img}" style="width:60px;height:60px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'">`
+    ).join('');
     openProductModal(false).then(() => {
       document.getElementById('product-celebrity').value = p.celebrity?._id || p.celebrity || '';
     });
@@ -403,30 +502,180 @@
   }
 
   // ── Orders ────────────────────────────────────────────────────────────────
-  async function loadOrders() {
+  let allOrdersCache = [];
+
+  async function loadOrders(page = 1) {
     try {
-      const { orders } = await API.get('/orders');
+      const search = document.getElementById('order-search')?.value || '';
+      const status = document.getElementById('order-status-filter')?.value || '';
+      const paymentMethod = document.getElementById('order-payment-filter')?.value || '';
+      const params = new URLSearchParams({ page, limit: 20 });
+      if (status) params.set('status', status);
+      if (paymentMethod) params.set('paymentMethod', paymentMethod);
+
+      const { orders, total, pages } = await API.get('/orders?' + params);
+      allOrdersCache = orders;
+
+      let list = orders;
+      if (search) {
+        const s = search.toLowerCase();
+        list = orders.filter(o =>
+          o._id.toLowerCase().includes(s) ||
+          (o.user?.email || '').toLowerCase().includes(s) ||
+          (o.guestEmail || '').toLowerCase().includes(s) ||
+          (o.user?.name || '').toLowerCase().includes(s)
+        );
+      }
+
+      document.getElementById('orders-count').textContent = `(${total} total)`;
+
       const tbody = document.getElementById('orders-table');
-      tbody.innerHTML = orders.map(o => `
-        <tr>
-          <td style="font-family:monospace;font-size:0.75rem">${o._id?.slice(-8)}</td>
-          <td>${o.user?.name || o.guestEmail || 'Guest'}</td>
-          <td class="text-gold">$${o.total?.toFixed(2)}</td>
+      tbody.innerHTML = list.map(o => `
+        <tr style="cursor:pointer" onclick="viewOrderDetail('${o._id}')">
+          <td style="font-family:monospace;font-size:0.75rem" title="${o._id}">${o._id?.slice(-8)}</td>
+          <td>${o.user?.name || 'Guest'}<br><span style="font-size:0.73rem;color:var(--text-muted)">${o.user?.email || o.guestEmail || ''}</span></td>
+          <td>${o.items?.length || 0} item${o.items?.length !== 1 ? 's' : ''}</td>
+          <td style="color:var(--gold);font-weight:600">$${o.total?.toFixed(2)}</td>
           <td>${o.paymentMethod === 'bitcoin' ? '₿ Bitcoin' : '💳 Card'}</td>
+          <td><span class="badge ${o.paymentStatus === 'paid' ? 'badge-success' : 'badge-warning'}">${o.paymentStatus}</span></td>
           <td><span class="badge ${statusBadge(o.status)}">${o.status}</span></td>
           <td>${new Date(o.createdAt).toLocaleDateString()}</td>
-          <td>
+          <td onclick="event.stopPropagation()">
             <select class="form-select" style="padding:0.3rem;font-size:0.8rem;width:130px" onchange="updateOrderStatus('${o._id}', this.value)">
               ${['pending','processing','shipped','delivered','cancelled','refunded'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
             </select>
           </td>
-        </tr>`).join('') || '<tr><td colspan="7" class="empty-state">No orders yet</td></tr>';
+        </tr>`).join('') || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">No orders found</td></tr>';
+
+      const pag = document.getElementById('orders-pagination');
+      pag.innerHTML = pages > 1
+        ? Array.from({ length: pages }, (_, i) => i + 1).map(p =>
+            `<button class="btn btn-sm ${p === page ? 'btn-gold' : 'btn-outline'}" onclick="loadOrders(${p})">${p}</button>`).join('')
+        : '';
     } catch(e) { showToast('Failed to load orders', 'error'); }
+  }
+
+  async function viewOrderDetail(id) {
+    try {
+      const o = await API.get('/orders/' + id);
+      const ship = o.shippingAddress || {};
+      document.getElementById('order-detail-content').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1.5rem;font-size:0.9rem">
+          <div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;text-transform:uppercase">Order ID</div>
+            <div style="font-family:monospace;font-size:0.8rem;word-break:break-all">${o._id}</div></div>
+          <div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;text-transform:uppercase">Date</div>
+            <div>${new Date(o.createdAt).toLocaleString()}</div></div>
+          <div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;text-transform:uppercase">Customer</div>
+            <div>${o.user?.name || 'Guest'}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">${o.user?.email || o.guestEmail || ''}</div></div>
+          <div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:0.3rem;text-transform:uppercase">Payment</div>
+            <div>${o.paymentMethod === 'bitcoin' ? '₿ Bitcoin' : '💳 Card'}</div>
+            <div><span class="badge ${o.paymentStatus === 'paid' ? 'badge-success' : 'badge-warning'}">${o.paymentStatus}</span>
+            &nbsp;<span class="badge ${statusBadge(o.status)}">${o.status}</span></div></div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1.2rem">
+          <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.75rem">Items</div>
+          ${(o.items || []).map(item => `
+            <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem">
+              <span>${item.name} <span style="color:var(--text-muted)">×${item.quantity}</span></span>
+              <span style="color:var(--gold)">$${(item.price * item.quantity).toFixed(2)}</span>
+            </div>`).join('')}
+          <div style="display:flex;justify-content:space-between;padding-top:0.75rem;font-weight:700">
+            <span>Total</span><span style="color:var(--gold)">$${o.total?.toFixed(2)}</span>
+          </div>
+        </div>
+        ${ship.line1 ? `
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1.2rem">
+          <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">Shipping Address</div>
+          <div style="font-size:0.9rem">${ship.fullName || ''}<br>
+          <span style="color:var(--text-muted)">${ship.line1}${ship.line2 ? ', ' + ship.line2 : ''}<br>
+          ${ship.city}${ship.state ? ', ' + ship.state : ''} ${ship.postalCode || ''}<br>${ship.country}</span></div>
+        </div>` : ''}
+        ${o.bitcoinAddress ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem">BTC address: <span style="font-family:monospace">${o.bitcoinAddress}</span></div>` : ''}
+        ${o.stripePaymentIntentId ? `<div style="font-size:0.8rem;color:var(--text-muted)">Stripe PI: <span style="font-family:monospace">${o.stripePaymentIntentId}</span></div>` : ''}
+      `;
+      document.getElementById('order-detail-modal').classList.add('open');
+    } catch(e) { showToast('Failed to load order details', 'error'); }
+  }
+
+  function exportOrdersCSV() {
+    if (!allOrdersCache.length) { showToast('Load orders first', 'error'); return; }
+    const rows = [['ID','Customer','Email','Items','Total','Payment','Pay Status','Order Status','Date']];
+    allOrdersCache.forEach(o => rows.push([
+      o._id, o.user?.name || 'Guest', o.user?.email || o.guestEmail || '',
+      o.items?.length || 0, o.total?.toFixed(2), o.paymentMethod,
+      o.paymentStatus, o.status, new Date(o.createdAt).toLocaleDateString()
+    ]));
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'orders.csv' });
+    a.click();
   }
 
   async function updateOrderStatus(id, status) {
     try { await API.put('/orders/' + id + '/status', { status }); showToast('Order updated', 'success'); }
     catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ── Users ─────────────────────────────────────────────────────────────────
+  let usersList = [];
+  async function loadUsers() {
+    try {
+      const search = document.getElementById('user-search')?.value || '';
+      const role = document.getElementById('user-role-filter')?.value || '';
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      if (role) params.set('role', role);
+      const { users, total } = await API.get('/users?' + params);
+      usersList = users;
+      document.getElementById('users-count').textContent = `(${total} total)`;
+      const tbody = document.getElementById('users-table');
+      const me = Auth.getUser();
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td><strong>${u.name}</strong></td>
+          <td style="font-size:0.85rem">${u.email}</td>
+          <td><span class="badge ${u.role === 'admin' ? 'badge-gold' : 'badge-success'}">${u.role}</span></td>
+          <td><span class="badge ${u.active !== false ? 'badge-success' : 'badge-danger'}">${u.active !== false ? 'Active' : 'Suspended'}</span></td>
+          <td style="font-size:0.8rem;color:var(--text-muted)">${new Date(u.createdAt).toLocaleDateString()}</td>
+          <td style="display:flex;gap:0.4rem;padding-top:0.75rem;flex-wrap:wrap">
+            ${u._id !== me?.id ? `
+              <button class="btn btn-outline btn-sm" onclick="changeUserRole('${u._id}','${u.role}')">
+                ${u.role === 'admin' ? 'Make Fan' : 'Make Admin'}
+              </button>
+              <button class="btn btn-sm ${u.active !== false ? 'btn-danger' : 'btn-outline'}" onclick="toggleUserActive('${u._id}',${u.active !== false})">
+                ${u.active !== false ? 'Suspend' : 'Reinstate'}
+              </button>` : '<span style="color:var(--text-muted);font-size:0.8rem">(you)</span>'}
+          </td>
+        </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">No users found</td></tr>';
+    } catch(e) { showToast('Failed to load users', 'error'); }
+  }
+
+  async function changeUserRole(id, currentRole) {
+    const newRole = currentRole === 'admin' ? 'fan' : 'admin';
+    if (!confirm(`Change this user to ${newRole}?`)) return;
+    try { await API.put('/users/' + id + '/role', { role: newRole }); showToast('Role updated', 'success'); loadUsers(); }
+    catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function toggleUserActive(id, currentlyActive) {
+    const action = currentlyActive ? 'suspend' : 'reinstate';
+    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} this user?`)) return;
+    try { await API.put('/users/' + id + '/active', { active: !currentlyActive }); showToast('User updated', 'success'); loadUsers(); }
+    catch(e) { showToast(e.message, 'error'); }
+  }
+
+  // ── Image previews ────────────────────────────────────────────────────────
+  function previewImg(input, previewId) {
+    const file = input.files[0];
+    const img = document.getElementById(previewId);
+    if (file) { img.src = URL.createObjectURL(file); img.style.display = 'block'; }
+  }
+  function previewMultiImg(input, previewId) {
+    const container = document.getElementById(previewId);
+    container.innerHTML = Array.from(input.files).map(f =>
+      `<img src="${URL.createObjectURL(f)}" style="width:60px;height:60px;object-fit:cover;border-radius:6px">`
+    ).join('');
   }
 
   function statusBadge(s) {

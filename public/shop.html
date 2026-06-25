@@ -28,7 +28,7 @@
   <div style="display:flex;flex-direction:column;gap:1.2rem;margin-bottom:2.5rem">
     <div class="search-wrap" style="max-width:380px">
       <span class="search-icon">🔍</span>
-      <input id="search" class="search-input" placeholder="Search gifts or celebrities..." oninput="loadProducts()">
+      <input id="search" class="search-input" placeholder="Search gifts or celebrities..." oninput="debouncedLoad()">
     </div>
     <div class="filter-bar">
       <button class="filter-pill active" data-cat="">All Gifts</button>
@@ -96,17 +96,17 @@
         return;
       }
       el.innerHTML = products.map(p => `
-        <div class="card">
+        <div class="card" onclick="window.location='/product.html?id=${p._id}'" style="cursor:pointer">
           <div class="card-img-wrap">
             <img class="card-img" src="${p.images?.[0] || '/img/placeholder.svg'}" alt="${p.name}" onerror="this.src='/img/placeholder.svg'">
           </div>
           <div class="card-body">
-            ${p.celebrity ? `<div class="card-label"><a href="/celebrity.html?slug=${p.celebrity.slug}" style="color:var(--gold);text-decoration:none">${p.celebrity.name}</a></div>` : ''}
+            ${p.celebrity ? `<div class="card-label"><a href="/celebrity.html?slug=${p.celebrity.slug}" style="color:var(--gold);text-decoration:none" onclick="event.stopPropagation()">${p.celebrity.name}</a></div>` : ''}
             <div class="card-title">${p.name}</div>
             <div class="card-sub">${p.description?.substring(0,65)}...</div>
             <div class="card-footer">
               <div class="card-price">$${p.price.toFixed(2)}</div>
-              <button class="btn btn-gold btn-sm" onclick='Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
+              <button class="btn btn-gold btn-sm" onclick='event.stopPropagation();Cart.add(${JSON.stringify(p)})'>Add to Cart</button>
             </div>
           </div>
         </div>`).join('');
@@ -114,6 +114,8 @@
       document.getElementById('products-grid').innerHTML = '<div class="empty-state"><h3>Failed to load</h3></div>';
     }
   }
+  let _debounceTimer;
+  function debouncedLoad() { clearTimeout(_debounceTimer); _debounceTimer = setTimeout(loadProducts, 300); }
   loadProducts();
 </script>
 </body>
