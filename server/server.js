@@ -9,6 +9,8 @@ const connectDB = require('./config/db');
 
 const app = express();
 
+if (!process.env.JWT_SECRET) console.warn('WARNING: JWT_SECRET is not set — logins will fail.');
+
 connectDB().then(() => autoSeed());
 
 async function autoSeed() {
@@ -20,8 +22,12 @@ async function autoSeed() {
     const adminExists = await User.findOne({ role: 'admin' });
     if (adminExists) return;
 
-    await User.create({ name: 'Admin', email: 'admin@stargifts.com', password: 'admin123', role: 'admin' });
-    console.log('Admin account created — admin@stargifts.com / admin123');
+    const crypto = require('crypto');
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@stargifts.com';
+    const generated = !process.env.ADMIN_PASSWORD;
+    const adminPassword = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
+    await User.create({ name: 'Admin', email: adminEmail, password: adminPassword, role: 'admin' });
+    console.log(`Admin account created — ${adminEmail}` + (generated ? ` / ${adminPassword} (generated — change it after first login)` : ''));
 
     const celeb = await Celebrity.create({
       name: 'Sample Star', slug: 'sample-star', category: 'music',
@@ -58,6 +64,9 @@ const authLimiter = rateLimit({
 });
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Health check for hosting platforms
+app.get('/healthz', (req, res) => res.json({ ok: true }));
 
 // Expose safe public config to frontend
 app.get('/api/config', (req, res) => {
